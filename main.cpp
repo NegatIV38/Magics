@@ -43,9 +43,18 @@ int main()
 
 	Material mat(3);
 	Material mat2(8);
-	mat.print();
+	Material mat4(40);
+//	mat.print();
 	std::cout << "------" <<std::endl;
-	mat2.print();
+//	mat2.print();
+	std::cout << "0000000000000000000000000000000000000000000" <<std::endl;
+	Material mat3 = mat.result(mat2);
+//	mat3.print();
+	std::map<Element::REACTION, float> need;
+	for(int i = 0; i < int(Element::REACTION::__COUNT); i++){
+		need.emplace(Element::REACTION(i), i);
+	}
+	auto ret = mat.transmute(mat4,mat3.getGlobal().getSum()); 
 	Console cwin(window);
 	
 	while (window->isOpen())
