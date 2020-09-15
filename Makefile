@@ -3,7 +3,7 @@ LIB=-lsfml-graphics -lsfml-window -lsfml-system
 
 all: main
 
-main: *.o
+main: Attribute.o Element.o Console.o Function.o Material.o Descripteur.o main.o
 	$(CC) $^ -o $@ $(LIB)
 
 %.o: %.cpp
@@ -19,4 +19,4 @@ Console.o: Console.h
 Element.o: Element.h
 Attribute.o: Attribute.h
 Material.o: Material.h Attribute.h
-Gaz.o: Gaz.h Element.h
+##Gaz.o: Gaz.h Element.h

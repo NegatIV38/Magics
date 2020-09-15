@@ -76,14 +76,16 @@ void Element::randomize(){
 	}	
 }
 void Element::initPower(int rank , bool random){
+	m_activation.clear();
+	m_resistance.clear();
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		if(random){
-			m_activation.at(REACTION(i)) = (rand()%(rank*1000))/1000.f;
-			m_resistance.at(REACTION(i)) = (rand()%(rank*1000))/1000.f;
+			m_activation.emplace(REACTION(i) , (rand()%(rank*1000))/1000.f);
+			m_resistance.emplace(REACTION(i) , (rand()%(rank*1000))/1000.f);
 		}
 		else{
-			m_activation.at(REACTION(i)) = rank;
-			m_resistance.at(REACTION(i)) = rank;
+			m_activation.emplace(REACTION(i) , rank);
+			m_resistance.emplace(REACTION(i) , rank);
 		
 		}
 	}

@@ -56,7 +56,6 @@ int main()
 	}
 	auto ret = mat.transmute(mat4,mat3.getGlobal().getSum()); 
 	Console cwin(window);
-	
 	while (window->isOpen())
 	{
 		sf::Event event;

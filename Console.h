@@ -5,10 +5,11 @@
 #include <memory>
 #include "Descripteur.h"
 #include "Function.h"
+#include "Element.h"
 
 
 enum TYPE{
-	DESCRIPTOR, FUNCTION
+	DESCRIPTOR, FUNCTION, ELEMENT
 };
 
 enum STATE{
@@ -20,7 +21,13 @@ enum STATE{
 	ADDCHILD,ADDCHILD_NEWD,ADDCHILD_DNAME,ADDCHILD_FNAME, ADDCHILD_ARG, 
 	GETCHILD, GETCHILD_ARG, D_PRINT, SETFUN,SETFUN_ARG, REMOVECHILD, REMOVECHILD_ARG,
 	VAR_F,
-	F_PRINT
+	F_PRINT,
+
+	NEW_ELEM, ELEM_NAME, ELEM_RANK,
+	VAR_E, E_PRINT, E_RAND, 
+	E_EXALT, E_EXALT_REAC, E_EXALT_WEIGHT,
+	E_INHIB, E_INHIB_REAC, E_INHIB_WEIGHT,
+	E_ABSORB, E_ABSORB_ELEM	
 };
 
 class Console{
@@ -46,6 +53,7 @@ class Console{
 	private:
 
 		std::string autoComplete(std::string line, int id);
+		bool is_num(const std::string& str);	
 		void updateHistory();	
 		int getHistMaxSize();
 		std::vector<std::string> cmdCut(std::string cmd,std::vector<char> delimits);
@@ -56,6 +64,8 @@ class Console{
 
 		void newDescriptor(std::string name, std::string fun);
 		void newFunction(std::string name);
+		void newElement(std::string name, int rank = 1);		
+
 		void execPrint(std::string name);
 		void execSetFunc(std::string desc, std::string fun);
 		void execAddChild(std::string desc, std::string child);
@@ -80,6 +90,11 @@ class Console{
 		bool isFunction(std::string str);
 		bool inFunctions(std::string str);
 		bool inDescriptors(std::string str);
+
+		bool isElement(std::string str);
+		bool inElements(std::string str);
+		
+		
 		//------------------------------------
 		bool m_visibility;
 		std::shared_ptr<sf::RectangleShape> m_background;
@@ -94,6 +109,7 @@ class Console{
 		std::map<std::string,TYPE> m_variables;
 		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
 		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
+		std::map<std::string, std::shared_ptr<Element>> m_varElements;
 }; 
 
 #endif

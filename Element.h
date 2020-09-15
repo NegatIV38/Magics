@@ -4,6 +4,7 @@
 #include <map>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <memory>
 
 class Element{
@@ -40,6 +41,8 @@ enum REACTION{
 		void absorb(std::shared_ptr<Element> elem);
 	private:
 		void initStable();
+	
+		//std::string m_name;
 	
 		std::map<REACTION, float> m_activation;
 		std::map<REACTION, float> m_resistance;
