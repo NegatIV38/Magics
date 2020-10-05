@@ -1,11 +1,10 @@
 #ifndef __MATERIAL_H__
 #define __MATERIAL_H__ 
 
-#include "Attribute.h"
 #include "Element.h"
 
 
-class Material : public Attribute{
+class Material {
 
 	public:
 		Material();

@@ -1,9 +1,9 @@
 #include <SFML/Graphics.hpp>
-#include "Descripteur.h"
-#include "Function.h"
+#include "System/Descripteur.h"
+#include "System/Function.h"
 #include "Console.h"
-#include "Element.h"
-#include "Material.h"
+#include "Physics/Element.h"
+#include "Physics/Material.h"
 #include <ctime>
 
 int main()
