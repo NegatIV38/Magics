@@ -21,6 +21,37 @@ void Element::initStable(){
 	}
 }
 
+std::vector<std::string> Element::getPrintableState(){
+	std::vector<std::string> ret;
+	std::string space = "\t\t\t";
+	std::string line = space;
+	for(int i = 0; i < int(REACTION::__COUNT); i++){
+		if(REACTION(i) == REACTION::GEL || REACTION(i) == REACTION:: INFLAMMATION){
+			line += space;
+		}
+		line += ("\t" +reacToStr(REACTION(i)));
+		
+	}
+	ret.push_back(line);
+	line = "ACT.";
+	for(int i = 0; i < int(REACTION::__COUNT); i++){
+		line += (space + std::to_string(m_activation.at(REACTION(i))));
+	}
+	ret.push_back(line);
+	line = "RES.";
+	for(int i = 0; i < int(REACTION::__COUNT); i++){
+		line += (space + std::to_string(m_resistance.at(REACTION(i))));
+	}
+	ret.push_back(line);
+;
+	line = "SUM.";
+	for(int i = 0; i < int(REACTION::__COUNT); i++){
+		line += (space + std::to_string(m_activation.at(REACTION(i))-m_resistance.at(REACTION(i))));
+	}
+	ret.push_back(line);
+	return ret;
+}
+
 void Element::print(){
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		std::cout << reacToStr(REACTION(i)) << " :\tActiv: " <<m_activation.at(REACTION(i)) << " \tResist: "<< m_resistance.at(REACTION(i))<< " \tSum: "<< m_activation.at(REACTION(i))- m_resistance.at(REACTION(i))<<std::endl;
@@ -98,6 +129,57 @@ void Element::null(){
 	}	
 }
 
+
+Element::REACTION Element::strToReac(std::string str){
+	std::string s = str;
+	for(int i = 0; i < s.size(); i++){
+		s[i] = std::toupper(s[i]);
+	}
+	if(s ==	"SOUFFLE"){
+		return SOUFFLE;
+	}
+	if(s == "ATTRACTION"){
+		return ATTRACTION;
+	}
+	if(s ==	"REPULSION"){
+		return REPULSION;
+	}
+	if(s ==	"INFLAMMATION"){
+		return INFLAMMATION;
+	}
+	if(s == "EXPLOSION"){
+		return EXPLOSION;
+	}
+	if(s ==	"GEL"){
+		return GEL;
+	}
+	if(s ==	"LIQUEFACTION"){
+		return LIQUEFACTION;
+	}
+	if(s ==	"CORROSION"){
+		return CORROSION;
+	}
+	if(s ==	"TOXICITE"){
+		return TOXICITE;
+	}
+ 	if(s ==	"DECHARGE"){
+		return DECHARGE;
+	} 
+	if(s ==	"RADIOACTIVITE"){
+		return RADIOACTIVITE;
+	}
+	if(s ==	"ELEC_STATIC"){
+		return ELEC_STATIC;
+	}
+	if(s ==	"SOLIDIFICATION"){
+		return SOLIDIFICATION;
+	}
+	if(s ==	"SUBLIMATION"){
+		return SUBLIMATION;
+	}
+	return __COUNT;
+	
+}
 
 
 std::string Element::reacToStr(REACTION r){

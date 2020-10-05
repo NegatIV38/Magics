@@ -18,8 +18,8 @@ enum STATE{
 	NEW_DESC, DESC_NAME, DESC_FUN,
 	NEW_FUN, FUN_NAME,
 	VAR_D, 
-	ADDCHILD,ADDCHILD_NEWD,ADDCHILD_DNAME,ADDCHILD_FNAME, ADDCHILD_ARG, 
-	GETCHILD, GETCHILD_ARG, D_PRINT, SETFUN,SETFUN_ARG, REMOVECHILD, REMOVECHILD_ARG,
+	D_ADDCHILD,D_ADDCHILD_NEWD,D_ADDCHILD_DNAME,D_ADDCHILD_FNAME, D_ADDCHILD_ARG, 
+	D_GETCHILD, D_GETCHILD_ARG, D_PRINT, D_SETFUN,D_SETFUN_ARG, D_REMOVECHILD, D_REMOVECHILD_ARG,
 	VAR_F,
 	F_PRINT,
 
@@ -66,10 +66,13 @@ class Console{
 		void newFunction(std::string name);
 		void newElement(std::string name, int rank = 1);		
 
-		void execPrint(std::string name);
-		void execSetFunc(std::string desc, std::string fun);
-		void execAddChild(std::string desc, std::string child);
-		void execRemoveChild(std::string desc, std::string child);
+		void execDPrint(std::string name);
+		void execDSetFunc(std::string desc, std::string fun);
+		void execDAddChild(std::string desc, std::string child);
+		void execDRemoveChild(std::string desc, std::string child);
+
+		void execFPrint(std::string name);
+		void execEPrint(std::string name);
 		
 		STATE getInitErr(std::string msg);
 		STATE getNewDescErr(std::string msg);

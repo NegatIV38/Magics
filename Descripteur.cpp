@@ -15,11 +15,11 @@ Descripteur::Descripteur(Descripteur& copy){
 Descripteur::Descripteur(std::string name, const std::shared_ptr<Function>& fun)
 	: m_name(name),m_function(fun)
 {
-	
+
 }
 
 Descripteur::~Descripteur(){
-	
+
 }
 
 void Descripteur::print(int indent){

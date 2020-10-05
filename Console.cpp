@@ -57,20 +57,20 @@ void Console::execute(std::string cmd){
 			newFunction(words.at(idWord));
 		}
 		if(cState == STATE::D_PRINT){
-			execPrint(words.at(idWord-1));
+			execDPrint(words.at(idWord-1));
 		}
-		if(cState == STATE::SETFUN_ARG){
-			execSetFunc(words.at(idWord-2), words.at(idWord));
+		if(cState == STATE::D_SETFUN_ARG){
+			execDSetFunc(words.at(idWord-2), words.at(idWord));
 		}
-		if(cState == STATE::ADDCHILD_ARG){
-			execAddChild(currentVar, words.at(idWord));
+		if(cState == STATE::D_ADDCHILD_ARG){
+			execDAddChild(currentVar, words.at(idWord));
 		}
-		if(cState == STATE::ADDCHILD_FNAME){
+		if(cState == STATE::D_ADDCHILD_FNAME){
 			newDescriptor(words.at(idWord-1), words.at(idWord));
-			execAddChild(currentVar,words.at(idWord-1));
+			execDAddChild(currentVar,words.at(idWord-1));
 		}
-		if(cState == STATE::REMOVECHILD_ARG){
-			execRemoveChild(words.at(idWord-2), words.at(idWord));
+		if(cState == STATE::D_REMOVECHILD_ARG){
+			execDRemoveChild(words.at(idWord-2), words.at(idWord));
 		}
 		if(cState == STATE::VAR_D){
 			currentVar = words.at(idWord);
@@ -92,12 +92,18 @@ void Console::execute(std::string cmd){
 			newElement(words.at(idWord-1),std::stoi(words.at(idWord)));
 		}
 		if(cState == STATE::E_PRINT){
+			execEPrint(words.at(idWord-1));
 			m_varElements.at(words.at(idWord-1))->print();
 		}	
 		if(cState == STATE::E_RAND){
 			m_varElements.at(words.at(idWord-1))->randomize();
 		}
-		
+		if(cState == STATE::E_EXALT_WEIGHT){
+			m_varElements.at(words.at(idWord-3))->exalt(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+		}
+		if(cState == STATE::E_INHIB_WEIGHT){
+			m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+		}
 		idWord++;
 	} 
 	std::cout << stateToStr(cState) << std::endl << std::endl;
@@ -169,77 +175,77 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			break;
 		case STATE::VAR_D:
 			if(cWord == "addChild"){
-				return STATE::ADDCHILD;
+				return STATE::D_ADDCHILD;
 			}
 			else if (cWord == "getChild"){
-				return STATE::GETCHILD;
+				return STATE::D_GETCHILD;
 			}
 			else if (cWord == "setFunction"){
-				return STATE::SETFUN;
+				return STATE::D_SETFUN;
 			}
 			else if(cWord == "print"){
 				return STATE::D_PRINT;
 			}
 			else if(cWord == "removeChild"){
-				return STATE::REMOVECHILD;
+				return STATE::D_REMOVECHILD;
 			}
 			else{
 				return getVarDErr(cWord);
 			}
 			break;
-		case STATE::ADDCHILD:
+		case STATE::D_ADDCHILD:
 			if(cWord == "Desc" || cWord == "D" || cWord == "Descriptor"){
-				return STATE::ADDCHILD_NEWD;
+				return STATE::D_ADDCHILD_NEWD;
 			}
 			else if(!inDescriptors(cWord)){
 				return getAddChildErr(cWord);
 			}
-			return STATE::ADDCHILD_ARG; 
-		case STATE::ADDCHILD_NEWD:
+			return STATE::D_ADDCHILD_ARG; 
+		case STATE::D_ADDCHILD_NEWD:
 			if(isVariable(cWord)){
 				return getAddChildNewDErr(cWord);
 			}
-			return ADDCHILD_DNAME;
-		case STATE::ADDCHILD_DNAME:
+			return D_ADDCHILD_DNAME;
+		case STATE::D_ADDCHILD_DNAME:
 			if(inDescriptors(cWord)){
 				return getAddChildDNameErr(cWord);
 			}
-			return STATE::ADDCHILD_FNAME;
-		case STATE::ADDCHILD_FNAME:
+			return STATE::D_ADDCHILD_FNAME;
+		case STATE::D_ADDCHILD_FNAME:
 			if(cWord != "&"){
 				return getAddChildFNameErr(cWord);
 			}
-			return STATE::ADDCHILD;
-		case STATE::ADDCHILD_ARG:
+			return STATE::D_ADDCHILD;
+		case STATE::D_ADDCHILD_ARG:
 			if(cWord != "&"){
 				return getAddChildFNameErr(cWord);
 			}
-			return STATE::ADDCHILD;
-		case STATE::GETCHILD:
+			return STATE::D_ADDCHILD;
+		case STATE::D_GETCHILD:
 			if(!inDescriptors(cWord)){
 				return getGetChildErr(cWord);
 			}
 			return STATE::VAR_D;
-		case STATE::GETCHILD_ARG:
+		case STATE::D_GETCHILD_ARG:
 
 			break;
-		case STATE::SETFUN:
+		case STATE::D_SETFUN:
 			if(!inFunctions(cWord)){
 				return getSetFunErr(cWord);
 			}
-			return STATE::SETFUN_ARG;
+			return STATE::D_SETFUN_ARG;
 					//SUCCESS
-		case STATE::SETFUN_ARG:
+		case STATE::D_SETFUN_ARG:
 			break;
 		case STATE::D_PRINT:
 					//SUCCESS
 			break;	
-		case STATE::REMOVECHILD:
+		case STATE::D_REMOVECHILD:
 			if(!inDescriptors(cWord)){
 				return getRemoveChildErr(cWord);
 			}
-			return STATE::REMOVECHILD_ARG;
-		case STATE::REMOVECHILD_ARG:
+			return STATE::D_REMOVECHILD_ARG;
+		case STATE::D_REMOVECHILD_ARG:
 
 			break;
 		case STATE::VAR_F:
@@ -280,17 +286,29 @@ STATE Console::nextState(STATE cState,std::string cWord){
 		case STATE::E_RAND:
 			break;
 		case STATE::E_EXALT:
+			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
+				return STATE::ERROR;
+			}
 			return STATE::E_EXALT_REAC;
 			break;
 		case STATE::E_INHIB:
+			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
+				return STATE::ERROR;
+			}
 			return STATE::E_INHIB_REAC;
 			break;
 		case STATE::E_EXALT_REAC:
+			if(!is_num(cWord)){
+				return STATE::ERROR;
+			}
 			return STATE::E_EXALT_WEIGHT;
 			break;
 		case STATE::E_EXALT_WEIGHT:
 			break;
 		case STATE::E_INHIB_REAC:
+			if(!is_num(cWord)){
+				return STATE::ERROR;
+			}
 			return STATE::E_INHIB_WEIGHT;
 			break;
 		case STATE::E_INHIB_WEIGHT:
@@ -355,19 +373,29 @@ void Console::printVar(){
 		print(txt);
 	}
 }
-void Console::execPrint(std::string name){
+void Console::execDPrint(std::string name){
 	std::vector<std::string> tree = m_varDescriptors.at(name)->getState();	
 	for(auto& line:tree){
 		print(line);
 	}
 }
-void Console::execAddChild(std::string desc, std::string child){
+void Console::execFPrint(std::string name){
+	
+}
+
+void Console::execEPrint(std::string name){
+	std::vector<std::string> table = m_varElements.at(name)->getPrintableState();
+	for(auto& line:table){
+		print(line);
+	}
+}
+void Console::execDAddChild(std::string desc, std::string child){
 	m_varDescriptors.at(desc)->addChild(m_varDescriptors.at(child));
 }
-void Console::execRemoveChild(std::string desc, std::string child){
+void Console::execDRemoveChild(std::string desc, std::string child){
 	m_varDescriptors.at(desc)->removeChild(m_varDescriptors.at(child));
 }
-void Console::execSetFunc(std::string desc, std::string fun){
+void Console::execDSetFunc(std::string desc, std::string fun){
 	if(inDescriptors(desc) && inFunctions(fun)){
 		m_varDescriptors.at(desc)->setFunction(m_varFunctions.at(fun));
 	}
@@ -459,26 +487,34 @@ std::string Console::stateToStr(STATE s){
 			return "FUN_NAME";		
 		case STATE::VAR_D:
 			return "VAR_D";
-		case STATE::ADDCHILD:
-			return "ADDCHILD";
-		case STATE::ADDCHILD_NEWD:
-			return "ADDCHILD_NEWD";
-		case STATE::ADDCHILD_DNAME:
-			return "ADDCHILD_DNAME";
-		case STATE::ADDCHILD_FNAME:
-			return "ADDCHILD_FNAME";
-		case STATE::ADDCHILD_ARG:
-			return "ADDCHILD_ARG";
-		case STATE::GETCHILD:
-			return "GETCHILD";
-		case::STATE::GETCHILD_ARG:
-			return "GETCHILD_ARG";
-		case STATE::SETFUN:
-			return "SETFUN";
+		case STATE::D_ADDCHILD:
+			return "D_ADDCHILD";
+		case STATE::D_ADDCHILD_NEWD:
+			return "D_ADDCHILD_NEWD";
+		case STATE::D_ADDCHILD_DNAME:
+			return "D_ADDCHILD_DNAME";
+		case STATE::D_ADDCHILD_FNAME:
+			return "D_ADDCHILD_FNAME";
+		case STATE::D_ADDCHILD_ARG:
+			return "D_ADDCHILD_ARG";
+		case STATE::D_GETCHILD:
+			return "D_GETCHILD";
+		case::STATE::D_GETCHILD_ARG:
+			return "D_GETCHILD_ARG";
+		case STATE::D_SETFUN:
+			return "D_SETFUN";
+		case STATE::D_SETFUN_ARG:
+			return "D_SETFUN_ARG";
 		case STATE::D_PRINT:
 			return "D_PRINT";
-		case STATE::REMOVECHILD:
-			return "REMOVECHILD";
+		case STATE::D_REMOVECHILD:
+			return "D_REMOVECHILD";
+		case STATE::D_REMOVECHILD_ARG:
+			return "D_REMOVECHILD_ARG";
+		case STATE::VAR_F:
+			return "VAR_F";
+		case STATE::F_PRINT:
+			return "F_PRINT";
 		case STATE::ELEM_NAME:
 			return "ELEM_NAME";
 		case STATE::ELEM_RANK:
@@ -491,8 +527,14 @@ std::string Console::stateToStr(STATE s){
 			return "E_EXALT";
 		case STATE::E_INHIB:
 			return "E_INHIB";
+		case STATE::E_INHIB_REAC:
+			return "E_INHIB_REAC";
+		case STATE::E_INHIB_WEIGHT:
+			return "E_INHIB_WEIGHT";
 		case STATE::E_ABSORB:
 			return "E_ABSORB";
+		case STATE::E_ABSORB_ELEM:
+			return "E_ABSORB_ELEM";
 		case STATE::NEW_ELEM:
 			return "NEW_ELEM";
 		case STATE::VAR_E:
@@ -514,7 +556,7 @@ void Console::newCmd(std::string cmd){
 }
 bool Console::is_num(const std::string& str){
     return !str.empty() && std::find_if(str.begin(), 
-        str.end(), [](unsigned char c) { return !std::isdigit(c); }) == str.end();
+        str.end(), [](unsigned char c) { return !(std::isdigit(c) || c == '.' || c == ','); }) == str.end();
 }
 std::vector<std::string> Console::cmdCut(std::string cmd,std::vector<char> delimits){
 	std::vector<std::string> ret;

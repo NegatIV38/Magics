@@ -9,7 +9,7 @@
 int main()
 {
 	srand(time(nullptr));
-	std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(sf::VideoMode(800, 600), "SFML works!");
+	std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(sf::VideoMode(1600, 600), "SFML works!");
 	Descripteur d("test",std::make_shared<Function>("objet"));
 
 	std::shared_ptr<Function> f1 = std::make_shared<Function>("rond");
