@@ -1,4 +1,5 @@
 #include "Console.h"
+#include <SFML/Graphics/Color.hpp>
 
 std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear"	};
 
@@ -19,7 +20,7 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win)
 {
 	m_visibility = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
-	m_background->setFillColor(sf::Color::Black);
+	m_background->setFillColor(sf::Color(0,0,0,127));
 	m_background->setOutlineColor(sf::Color::White);
 	m_background->setOutlineThickness(5);
 	m_font.loadFromFile("Minecraftia-Regular.ttf");

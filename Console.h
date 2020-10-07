@@ -3,9 +3,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <memory>
-#include "System/Descripteur.h"
-#include "System/Function.h"
-#include "Physics/Element.h"
+#include "Descripteur.h"
+#include "Function.h"
+#include "Element.h"
 
 
 enum TYPE{
