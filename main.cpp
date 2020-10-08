@@ -7,6 +7,7 @@
 #include <ctime>
 #include <memory>
 #include "MaterialArchView.h"
+#include "GraphManager.h"
 
 int main()
 {
@@ -18,12 +19,9 @@ int main()
 	for(int i = 0; i < int(Element::REACTION::__COUNT); i++){
 		need.emplace(Element::REACTION(i), i);
 	}
-	Console cwin(window);
+	std::shared_ptr<GraphManager> gmgr = std::make_shared<GraphManager>();
+	Console cwin(window, gmgr);
 
-	std::shared_ptr<MaterialArch> arch = std::make_shared<MaterialArch>();
-	arch->generate(9);
-	arch->getResultReac();
-	MaterialArchView mvTest(arch);
 
 	while (window->isOpen())
 	{
@@ -57,10 +55,10 @@ int main()
 			
 		}
 
+		gmgr->update();
 		cwin.update();
 		window->clear();
-		
-		mvTest.draw(window);
+		gmgr->draw(window);
 		if(cwin.isVisible()){
 			cwin.draw();
 		}

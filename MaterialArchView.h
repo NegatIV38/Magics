@@ -9,6 +9,11 @@
 #include "MaterialArch.h"
 #include "MatArchNodeView.h"
 
+struct NodeCounter{
+	static int c;
+	static void reset();
+};
+
 class MaterialArchView
 {
 private:
@@ -22,9 +27,8 @@ private:
 
 	static void linkBuild(std::shared_ptr<MatArchNode> cnode,  std::vector<std::shared_ptr<MatArchNodeView>>& nodesCollec, std::vector<std::shared_ptr<MatArchNode>>& nodeList);
 
+	static NodeCounter nc;
 
-
-	static void getLinks(std::shared_ptr<MatArchNode> cnode, std::vector<std::vector<int>>& linksCollec);
 public:
 
 
@@ -32,9 +36,10 @@ public:
 	virtual ~MaterialArchView();
 
 	void initNodes();
-	void drawLinks(std::shared_ptr<sf::RenderWindow> win);
 	void update();
 	void draw(std::shared_ptr<sf::RenderWindow> win);
+
+	void printLinks();
 };
 
 #endif /* MATERIALARCHVIEW_H */

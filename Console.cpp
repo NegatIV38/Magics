@@ -1,5 +1,8 @@
 #include "Console.h"
 #include <SFML/Graphics/Color.hpp>
+#include <map>
+#include <memory>
+#include <string>
 
 std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear"	};
 
@@ -15,8 +18,8 @@ Console::Console(){
 	m_font.loadFromFile("Minecraftia-Regular.ttf");
 	m_charSize = 12;
 }
-Console::Console(const std::shared_ptr<sf::RenderWindow>& win)
-	:m_parent(win)
+Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)
+	:m_parent(win), m_gMgr(gmgr)
 {
 	m_visibility = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
@@ -82,6 +85,9 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::EXIT){
 			m_parent->close();
 		}
+		if(cState == STATE::COLORS){
+			printColors();			
+		}
 		if(cState == STATE::ELEM_NAME){
 			if( idWord +1 == words.size() || !is_num(words.at(idWord+1))){
 
@@ -105,6 +111,12 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::E_INHIB_WEIGHT){
 			m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
 		}
+		if(cState == STATE::MAT_RANK){
+			newMaterial(words.at(idWord-1),std::stoi(words.at(idWord)));
+		}
+		if(cState == STATE::M_SHOW){
+			execMShow(words.at(idWord-1));
+		}
 		idWord++;
 	} 
 	std::cout << stateToStr(cState) << std::endl << std::endl;
@@ -120,6 +132,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			else if(cWord == "var"){
 				return STATE::VAR_LIST;	
 			}
+			else if(cWord == "colors"){
+				return STATE::COLORS;
+			}
 			else if(cWord == "exit"){
 				return STATE::EXIT;
 			}
@@ -132,6 +147,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			else if(cWord == "Elem" || cWord == "E" || cWord == "Element"){
 				return STATE::NEW_ELEM;
 			}
+			else if(cWord == "Mat" || cWord == "M" || cWord == "Material"){
+				return STATE::NEW_MAT;
+			}
 			else if(inDescriptors(cWord)){
 				return STATE::VAR_D;
 			}
@@ -141,9 +159,14 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			else if(inElements(cWord)){
 				return STATE::VAR_E;
 			}
+			else if(inMaterial(cWord)){
+				return STATE::VAR_M;
+			}
 			else{
 				return getInitErr(cWord);
 			}
+			break;
+		case STATE::COLORS:
 			break;
 		case STATE::CLEAR:
 			//SUCCESS
@@ -320,6 +343,19 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			}
 			return STATE::E_ABSORB_ELEM;
 			break;
+		case STATE::NEW_MAT:
+			return STATE::MAT_NAME;
+		case STATE::MAT_NAME:
+			return STATE::MAT_RANK;
+		case STATE::MAT_RANK:
+			break;
+		case STATE::VAR_M:
+			if(cWord == "show"){
+				return STATE::M_SHOW;
+			}
+			break;
+		case STATE::M_SHOW:
+			break;
 		default:
 			break;
 	}
@@ -331,18 +367,19 @@ void Console::update(){
 
 }
 void Console::draw(){
+
 	m_parent->draw(*m_background);
 	for(int i = 0; i < m_history.size(); i++){
 		m_parent->draw(*m_history.at(i));
 	}
 	m_parent->draw(m_current);
 }
-void Console::print(std::string txt){
+void Console::print(std::string txt,sf::Color c){
 	m_history.push_back(std::make_shared<sf::Text>());
 	m_history.back()->setFont(m_font);
 	m_history.back()->setString(txt);
 	m_history.back()->setCharacterSize(m_charSize-2);
-	m_history.back()->setFillColor(sf::Color::White);
+	m_history.back()->setFillColor(c);
 	updateHistory();
 
 }
@@ -372,6 +409,11 @@ void Console::printVar(){
 		txt += "\t";
 		txt += typeToStr(it->second); 
 		print(txt);
+	}
+}
+void Console::printColors(){
+	for(int i = 0; i < Element::REACTION::__COUNT; i++){
+		print(Element::reacToStr(Element::REACTION(i)),MatArchNodeView::elemColors.at(Element::REACTION(i)));
 	}
 }
 void Console::execDPrint(std::string name){
@@ -446,6 +488,22 @@ void Console::newElement(std::string name, int rank){
 		print("Error : Element name already used");
 	}
 } 
+void Console::newMaterial(std::string name, int rank){
+	if(!isVariable(name)){
+		m_variables.emplace(name,TYPE::MATERIAL);
+		if(!inMaterial(name)){
+			m_varMaterials.emplace(name,std::make_shared<MaterialArch>());
+			m_varMaterials.at(name)->generate(rank);
+		}
+	}
+	else{
+		print("Error : Material name already used");
+	}
+}
+
+void Console::execMShow(std::string name){
+	m_gMgr->addMaterial(m_varMaterials.at(name));
+}
 
 //Enums to Strings ----------------------------------------------------
 
@@ -459,6 +517,8 @@ std::string Console::typeToStr(TYPE t){
 			break;
 		case TYPE::ELEMENT:
 			return "Element";
+		case TYPE::MATERIAL:
+			return "Material";
 		default:
 			break;
 	}
@@ -540,6 +600,16 @@ std::string Console::stateToStr(STATE s){
 			return "NEW_ELEM";
 		case STATE::VAR_E:
 			return "VAR_E";
+		case STATE::NEW_MAT:
+			return "NEW_MAT";
+		case STATE::MAT_NAME:
+			return "MAT_NAME";
+		case STATE::MAT_RANK:
+			return "MAT_RANK";
+		case STATE::M_SHOW:
+			return "M_SHOW";
+		case STATE::VAR_M:
+			return "VAR_M";
 		default:
 			std::cout<< std::endl << "Unclassified enum : " << std::endl;
 			break;
@@ -714,6 +784,22 @@ bool Console::inElements(std::string str){
 	}
 	return false;
 }
+bool Console::isMaterial(std::string str){
+	if(!isVariable(str)){
+		return false;
+	}
+	if(m_variables.at(str) == TYPE::MATERIAL){
+		return true;
+	}
+	return false;
+}
+bool Console::inMaterial(std::string str){
+	if(m_varMaterials.find(str) != m_varMaterials.end()){
+		return true;	
+	}
+	return false;
+}
+
 
 //Automata detailed errors -----------------------------------------
 

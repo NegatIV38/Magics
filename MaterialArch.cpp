@@ -122,13 +122,13 @@ void MaterialArch::generate(int nbElem){
 			std::shared_ptr<MatArchNode> nextNode = std::make_shared<MatArchNode>();
 			nextNode->generate();
 
-
-
 			nodeList.push_back(nextNode);
 		}
+		if(nodeList.size() < 2){
+			return;
+		}
 		for (auto node : nodeList) {
-
-			int searchCount = 14;
+			int searchCount = 14+rand()%14;
 			bool canLink = false;
 
 			auto linkList = node->getNextNodes();
@@ -140,19 +140,21 @@ void MaterialArch::generate(int nbElem){
 			}
 			if(canLink){
 				for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
-					int idLinkNode;
-					do{
-						idLinkNode = rand()%nodeList.size();
-						searchCount--;
-					}while(nodeList.at(idLinkNode) == node && nodeList.at(idLinkNode)->getNode(Element::REACTION(j))!=nullptr && searchCount > 0);
-					if(searchCount > 0){
-						node->link(Element::REACTION(j),nodeList.at(idLinkNode));	
+					if(linkList.at(Element::REACTION(j)) == nullptr){
+
+						int idLinkNode;
+						do{
+							idLinkNode = rand()%nodeList.size();
+							searchCount--;
+						}while((nodeList.at(idLinkNode) == node || nodeList.at(idLinkNode)->getNode(Element::REACTION(j))!=nullptr) && searchCount > 0);
+						if(searchCount > 0){
+							node->link(Element::REACTION(j),nodeList.at(idLinkNode));	
+						}
 					}
 				}
 			}			
 		}
 	}
-
 }
 
 void MaterialArch::sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum){

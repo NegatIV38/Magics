@@ -2,19 +2,22 @@
 #define __CONSOLE_H__
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Graphics/Color.hpp>
 #include <memory>
 #include "Descripteur.h"
 #include "Function.h"
 #include "Element.h"
+#include "MaterialArch.h"
+#include "GraphManager.h"
 
 
 enum TYPE{
-	DESCRIPTOR, FUNCTION, ELEMENT
+	DESCRIPTOR, FUNCTION, ELEMENT, MATERIAL
 };
 
 enum STATE{
 	ERROR,
-	INIT,CLEAR, VAR_LIST, EXIT, 
+	INIT,CLEAR, VAR_LIST, EXIT, COLORS, 
 	NEW_DESC, DESC_NAME, DESC_FUN,
 	NEW_FUN, FUN_NAME,
 	VAR_D, 
@@ -27,14 +30,19 @@ enum STATE{
 	VAR_E, E_PRINT, E_RAND, 
 	E_EXALT, E_EXALT_REAC, E_EXALT_WEIGHT,
 	E_INHIB, E_INHIB_REAC, E_INHIB_WEIGHT,
-	E_ABSORB, E_ABSORB_ELEM	
+	E_ABSORB, E_ABSORB_ELEM,
+
+	NEW_MAT, MAT_NAME, MAT_RANK,
+	VAR_M, M_SHOW
+
+
 };
 
 class Console{
 	
 	public:
 		Console();
-		Console(const std::shared_ptr<sf::RenderWindow>& win);
+		Console(const std::shared_ptr<sf::RenderWindow>& win, std::shared_ptr<GraphManager> gmgr);
 		~Console();
 
 		static std::vector<std::string> m_dictionary;
@@ -44,7 +52,7 @@ class Console{
 		void toggle();
 		bool isVisible();
 		void newCmd(std::string cmd);
-		void print(std::string txt);
+		void print(std::string txt,sf::Color col = sf::Color::White);
 		void setCurrentCmd(char c);
 		void execute(std::string cmd);
 		void upArrow();
@@ -59,12 +67,14 @@ class Console{
 		std::vector<std::string> cmdCut(std::string cmd,std::vector<char> delimits);
 		STATE nextState(STATE cState,std::string cWord);
 		void printVar();
+		void printColors();
 		std::string typeToStr(TYPE t);
 		std::string stateToStr(STATE s);
 
 		void newDescriptor(std::string name, std::string fun);
 		void newFunction(std::string name);
 		void newElement(std::string name, int rank = 1);		
+		void newMaterial(std::string name, int rank);
 
 		void execDPrint(std::string name);
 		void execDSetFunc(std::string desc, std::string fun);
@@ -73,6 +83,8 @@ class Console{
 
 		void execFPrint(std::string name);
 		void execEPrint(std::string name);
+
+		void execMShow(std::string name);
 		
 		STATE getInitErr(std::string msg);
 		STATE getNewDescErr(std::string msg);
@@ -96,6 +108,9 @@ class Console{
 
 		bool isElement(std::string str);
 		bool inElements(std::string str);
+
+		bool isMaterial(std::string str);
+		bool inMaterial(std::string str);
 		
 		
 		//------------------------------------
@@ -113,6 +128,8 @@ class Console{
 		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
 		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
 		std::map<std::string, std::shared_ptr<Element>> m_varElements;
+		std::map<std::string, std::shared_ptr<MaterialArch>> m_varMaterials;
+		std::shared_ptr<GraphManager> m_gMgr;
 }; 
 
 #endif
