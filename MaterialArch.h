@@ -12,7 +12,8 @@ private:
 	std::shared_ptr<MatArchNode> m_root;	
 
 	static void sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum);
-	
+	static void setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>& ret);
+
 public:
 	MaterialArch();
 	virtual ~MaterialArch();
@@ -20,12 +21,15 @@ public:
 	void setRoot(std::shared_ptr<MatArchNode> r);
 	std::shared_ptr<MatArchNode> getRoot();
 	std::map<Element::REACTION, float> getResultReac();
+	std::map<Element::REACTION, std::vector<std::shared_ptr<MatArchNode>>> getFreeLinks();
 	void generate(int nbElem);
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode));
 	
+	std::shared_ptr<MaterialArch> combine(std::shared_ptr<MaterialArch> other);
+	MaterialArch operator+(const MaterialArch& other);	
+
 	template <typename T>
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode, T& extObject), T& extObject);
-
 	template <typename T, typename U>
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode, T& extObjectA, U& extObjectB), T& extObjectA, U& extObjectB);
 };

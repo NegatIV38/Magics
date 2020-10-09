@@ -113,9 +113,16 @@ void Console::execute(std::string cmd){
 		}
 		if(cState == STATE::MAT_RANK){
 			newMaterial(words.at(idWord-1),std::stoi(words.at(idWord)));
+			m_gMgr->addMaterial(words.at(idWord-1),m_varMaterials.at(words.at(idWord-1)));
 		}
 		if(cState == STATE::M_SHOW){
 			execMShow(words.at(idWord-1));
+		}
+		if(cState == STATE::M_HIDE){
+			execMHide(words.at(idWord-1));	
+		}
+		if(cState == STATE::M_PLUS_NEW_MAT){
+			execCombine(words.at(idWord-4),words.at(idWord-2),words.at(idWord));
 		}
 		idWord++;
 	} 
@@ -353,8 +360,30 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			if(cWord == "show"){
 				return STATE::M_SHOW;
 			}
+			if(cWord == "+"){
+				return STATE::M_PLUS;
+			}
+			if (cWord == "hide"){
+				return STATE::M_HIDE;
+			}
+			break;
+		case STATE::M_PLUS:
+			if(!inMaterial(cWord)){
+				std::cout << cWord << std::endl;
+				return STATE::ERROR;
+			}
+			return STATE::M_PLUS_ARG;
+		case STATE::M_PLUS_ARG:
+			
+			return STATE::M_PLUS_EQUAL;
+			break;
+		case STATE::M_PLUS_EQUAL:
+			return M_PLUS_NEW_MAT;
+		case STATE::M_PLUS_NEW_MAT:
 			break;
 		case STATE::M_SHOW:
+			break;
+		case STATE::M_HIDE:
 			break;
 		default:
 			break;
@@ -502,7 +531,26 @@ void Console::newMaterial(std::string name, int rank){
 }
 
 void Console::execMShow(std::string name){
-	m_gMgr->addMaterial(m_varMaterials.at(name));
+	m_gMgr->show(name);
+}
+void Console::execMHide(std::string name){
+	m_gMgr->hide(name);
+}
+
+
+
+void Console::execCombine(std::string a, std::string b, std::string c){
+	if(!isVariable(c)){
+		m_variables.emplace(c,TYPE::MATERIAL);
+		if(!inMaterial(c)){
+			m_varMaterials.emplace(c,m_varMaterials.at(a)->combine(m_varMaterials.at(b)));
+			m_gMgr->addMaterial(c,m_varMaterials.at(c));
+
+		}
+	}
+	else{
+		print("Error : Material name already used");
+	}
 }
 
 //Enums to Strings ----------------------------------------------------
@@ -610,6 +658,14 @@ std::string Console::stateToStr(STATE s){
 			return "M_SHOW";
 		case STATE::VAR_M:
 			return "VAR_M";
+		case STATE::M_PLUS:
+			return "M_PLUS";
+		case STATE::M_PLUS_ARG:
+			return "M_PLUS_ARG";
+		case STATE::M_PLUS_EQUAL:
+			return "M_PLUS_EQUAL";
+		case STATE::M_PLUS_NEW_MAT:
+			return "M_PLUS_NEW_MAT";
 		default:
 			std::cout<< std::endl << "Unclassified enum : " << std::endl;
 			break;

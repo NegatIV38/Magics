@@ -52,9 +52,9 @@ int main()
 					cwin.setCurrentCmd(event.text.unicode);
 				}
 			}
-			
 		}
-
+		GraphManager::dt = GraphManager::clock.getElapsedTime().asMilliseconds();
+		GraphManager::clock.restart();
 		gmgr->update();
 		cwin.update();
 		window->clear();
@@ -63,6 +63,7 @@ int main()
 			cwin.draw();
 		}
 		window->display();
+		
 	}
 
 	return 0;

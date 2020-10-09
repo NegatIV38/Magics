@@ -36,7 +36,7 @@ public:
 	virtual ~MaterialArchView();
 
 	void initNodes();
-	void update();
+	void update(double dt);
 	void draw(std::shared_ptr<sf::RenderWindow> win);
 
 	void printLinks();

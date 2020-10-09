@@ -7,8 +7,8 @@
 #include "Descripteur.h"
 #include "Function.h"
 #include "Element.h"
-#include "MaterialArch.h"
 #include "GraphManager.h"
+#include "MaterialArch.h"
 
 
 enum TYPE{
@@ -33,7 +33,8 @@ enum STATE{
 	E_ABSORB, E_ABSORB_ELEM,
 
 	NEW_MAT, MAT_NAME, MAT_RANK,
-	VAR_M, M_SHOW
+	VAR_M, M_SHOW, M_HIDE,
+	M_PLUS, M_PLUS_ARG, M_PLUS_EQUAL, M_PLUS_NEW_MAT
 
 
 };
@@ -85,6 +86,8 @@ class Console{
 		void execEPrint(std::string name);
 
 		void execMShow(std::string name);
+		void execMHide(std::string name);
+		void execCombine(std::string a, std::string b, std::string c);
 		
 		STATE getInitErr(std::string msg);
 		STATE getNewDescErr(std::string msg);

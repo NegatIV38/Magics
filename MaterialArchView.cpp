@@ -23,9 +23,9 @@ void MaterialArchView::draw(std::shared_ptr<sf::RenderWindow> win){
 	}
 }
 
-void MaterialArchView::update(){
+void MaterialArchView::update(double dt){
 	for (auto node : g_nodes) {
-		node->update();
+		node->update(dt);
 	}
 }
 
@@ -54,6 +54,7 @@ void MaterialArchView::linkBuild(std::shared_ptr<MatArchNode> cnode,  std::vecto
 	for(int i =0; i < Element::REACTION::__COUNT; i++){
 		for(std::size_t j = 0; j < nodeList.size(); j++){
 			if(nxtNodes.at(Element::REACTION(i))== nodeList.at(j)){
+				nodesCollec.at(nc.c)->setID(nc.c);
 				nodesCollec.at(nc.c)->addLink(nodesCollec.at(j),Element::REACTION(i));
 			}		
 		}
@@ -63,7 +64,7 @@ void MaterialArchView::linkBuild(std::shared_ptr<MatArchNode> cnode,  std::vecto
 
 void MaterialArchView::nodeBuild(std::shared_ptr<MatArchNode> cnode, std::vector<std::shared_ptr<MatArchNodeView>>& nodesCollec,std::vector<std::shared_ptr<MatArchNode>>& nodesList){
 	
-	nodesCollec.push_back(std::make_shared<MatArchNodeView>());
+	nodesCollec.push_back(std::make_shared<MatArchNodeView>(cnode));
 	nodesList.push_back(cnode);
 }
 

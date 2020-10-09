@@ -3,7 +3,7 @@ LIB=-lsfml-graphics -lsfml-window -lsfml-system
 
 all: main
 
-main: MaterialArch.o MatArchNode.o  MaterialArchView.o MatArchNodeView.o Element.o GraphManager.o Console.o Function.o Material.o Descripteur.o main.o
+main: GraphManager.o MaterialArch.o MatArchNode.o  MaterialArchView.o MatArchNodeView.o Element.o  Console.o Function.o Material.o Descripteur.o main.o
 
 	$(CC) $^ -o $@ $(LIB)
 
