@@ -22,6 +22,8 @@ private:
 	std::vector<std::shared_ptr<MatArchNodeView>> g_nodes;
 	std::vector<std::shared_ptr<MatArchNode>> m_nodes;
 	
+	sf::Thread m_updateTh;
+	bool threadStatus;
 
 	static void nodeBuild(std::shared_ptr<MatArchNode> cnode, std::vector<std::shared_ptr<MatArchNodeView>>& nodesCollec, std::vector<std::shared_ptr<MatArchNode>>& nodeList);
 
@@ -35,8 +37,13 @@ public:
 	MaterialArchView(std::shared_ptr<MaterialArch> arch);
 	virtual ~MaterialArchView();
 
+	void setPosition(sf::Vector2f pos, sf::Vector2f dim = sf::Vector2f(600,600));
+
+	void startUpdateTh();
+	void waitUpdateTh();
+
 	void initNodes();
-	void update(double dt);
+	void update();
 	void draw(std::shared_ptr<sf::RenderWindow> win);
 
 	void printLinks();

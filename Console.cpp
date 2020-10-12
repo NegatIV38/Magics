@@ -4,12 +4,11 @@
 #include <memory>
 #include <string>
 
-std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear"	};
+std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear","show","hide","hideall","colors"	};
 
 //Constructors
 
 Console::Console(){
-
 	m_visibility = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(800,200));
 	m_background->setFillColor(sf::Color::Black);
@@ -18,9 +17,7 @@ Console::Console(){
 	m_font.loadFromFile("Minecraftia-Regular.ttf");
 	m_charSize = 12;
 }
-Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)
-	:m_parent(win), m_gMgr(gmgr)
-{
+Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)	:m_parent(win), m_gMgr(gmgr){
 	m_visibility = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
 	m_background->setFillColor(sf::Color(0,0,0,127));
@@ -37,13 +34,11 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<Gr
 	m_cmdID = 0;
 }
 Console::~Console(){
-
 }
 
 //Automata ---------------------------------------------------------
 
 void Console::execute(std::string cmd){
-	//
 	STATE cState = STATE::INIT;
 	std::vector<std::string> words = cmdCut(cmd,std::vector<char>({' ','(',')',',','.','\0'}));
 	int idWord =0;
@@ -82,6 +77,9 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::CLEAR){
 			m_history.clear();
 		}
+		if(cState == STATE::HIDE_ALL){
+			m_gMgr->hideAll();
+		}
 		if(cState == STATE::EXIT){
 			m_parent->close();
 		}
@@ -90,7 +88,6 @@ void Console::execute(std::string cmd){
 		}
 		if(cState == STATE::ELEM_NAME){
 			if( idWord +1 == words.size() || !is_num(words.at(idWord+1))){
-
 				//std::cout << words.at(idWord)<< std::endl;
 				newElement(words.at(idWord));
 			}
@@ -121,6 +118,9 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::M_HIDE){
 			execMHide(words.at(idWord-1));	
 		}
+		if(cState == STATE::M_PRINT){
+			execMPrint(words.at(idWord-1));
+		}
 		if(cState == STATE::M_PLUS_NEW_MAT){
 			execCombine(words.at(idWord-4),words.at(idWord-2),words.at(idWord));
 		}
@@ -144,6 +144,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			}
 			else if(cWord == "exit"){
 				return STATE::EXIT;
+			}
+			else if (cWord == "hideall"){
+				return STATE::HIDE_ALL;
 			}
 			else if(cWord == "Desc" || cWord == "D" || cWord == "Descriptor"){
 				return STATE::NEW_DESC;
@@ -173,14 +176,6 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return getInitErr(cWord);
 			}
 			break;
-		case STATE::COLORS:
-			break;
-		case STATE::CLEAR:
-			//SUCCESS
-			break;
-		case STATE::EXIT:
-			//SUCCESS
-			break;
 		case STATE::NEW_DESC:
 			if(inDescriptors(cWord) || inFunctions(cWord)){
 				return getNewDescErr(cWord);
@@ -201,9 +196,6 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return getNewFunErr(cWord);
 			}
 			return STATE::FUN_NAME;
-		case STATE::FUN_NAME:
-			//SUCCESS		
-			break;
 		case STATE::VAR_D:
 			if(cWord == "addChild"){
 				return STATE::D_ADDCHILD;
@@ -257,43 +249,25 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return getGetChildErr(cWord);
 			}
 			return STATE::VAR_D;
-		case STATE::D_GETCHILD_ARG:
-
-			break;
 		case STATE::D_SETFUN:
 			if(!inFunctions(cWord)){
 				return getSetFunErr(cWord);
 			}
 			return STATE::D_SETFUN_ARG;
-					//SUCCESS
-		case STATE::D_SETFUN_ARG:
-			break;
-		case STATE::D_PRINT:
-					//SUCCESS
-			break;	
 		case STATE::D_REMOVECHILD:
 			if(!inDescriptors(cWord)){
 				return getRemoveChildErr(cWord);
 			}
 			return STATE::D_REMOVECHILD_ARG;
-		case STATE::D_REMOVECHILD_ARG:
-
-			break;
 		case STATE::VAR_F:
 			if(cWord == "print"){
 				return STATE::F_PRINT;
 			}
 			break;
-		case STATE::F_PRINT:
-			break;
 		case STATE::NEW_ELEM:
 			return STATE::ELEM_NAME;
-			break;
 		case STATE::ELEM_NAME:
 			return STATE::ELEM_RANK;
-			break;
-		case STATE::ELEM_RANK:
-			break;
 		case STATE::VAR_E:
 			if(cWord == "print"){
 				return STATE::E_PRINT;
@@ -311,51 +285,35 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return STATE::E_ABSORB;
 			}
 			break;
-		case STATE::E_PRINT:
-	
-			break;
-		case STATE::E_RAND:
-			break;
 		case STATE::E_EXALT:
 			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
 				return STATE::ERROR;
 			}
 			return STATE::E_EXALT_REAC;
-			break;
 		case STATE::E_INHIB:
 			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
 				return STATE::ERROR;
 			}
 			return STATE::E_INHIB_REAC;
-			break;
 		case STATE::E_EXALT_REAC:
 			if(!is_num(cWord)){
 				return STATE::ERROR;
 			}
 			return STATE::E_EXALT_WEIGHT;
-			break;
-		case STATE::E_EXALT_WEIGHT:
-			break;
 		case STATE::E_INHIB_REAC:
 			if(!is_num(cWord)){
 				return STATE::ERROR;
 			}
 			return STATE::E_INHIB_WEIGHT;
-			break;
-		case STATE::E_INHIB_WEIGHT:
-			break;
 		case STATE::E_ABSORB:
 			if(!inElements(cWord)){
 				return STATE::ERROR;
 			}
 			return STATE::E_ABSORB_ELEM;
-			break;
 		case STATE::NEW_MAT:
 			return STATE::MAT_NAME;
 		case STATE::MAT_NAME:
 			return STATE::MAT_RANK;
-		case STATE::MAT_RANK:
-			break;
 		case STATE::VAR_M:
 			if(cWord == "show"){
 				return STATE::M_SHOW;
@@ -366,6 +324,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			if (cWord == "hide"){
 				return STATE::M_HIDE;
 			}
+			if(cWord == "print"){
+				return STATE::M_PRINT;
+			}
 			break;
 		case STATE::M_PLUS:
 			if(!inMaterial(cWord)){
@@ -374,17 +335,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			}
 			return STATE::M_PLUS_ARG;
 		case STATE::M_PLUS_ARG:
-			
 			return STATE::M_PLUS_EQUAL;
-			break;
 		case STATE::M_PLUS_EQUAL:
 			return M_PLUS_NEW_MAT;
-		case STATE::M_PLUS_NEW_MAT:
-			break;
-		case STATE::M_SHOW:
-			break;
-		case STATE::M_HIDE:
-			break;
 		default:
 			break;
 	}
@@ -393,10 +346,8 @@ STATE Console::nextState(STATE cState,std::string cWord){
 //Graphical -----------------------------------------------------------
 
 void Console::update(){
-
 }
 void Console::draw(){
-
 	m_parent->draw(*m_background);
 	for(int i = 0; i < m_history.size(); i++){
 		m_parent->draw(*m_history.at(i));
@@ -410,12 +361,9 @@ void Console::print(std::string txt,sf::Color c){
 	m_history.back()->setCharacterSize(m_charSize-2);
 	m_history.back()->setFillColor(c);
 	updateHistory();
-
 }
 void Console::toggle(){
 	m_visibility = !m_visibility;	
-
-
 }
 bool Console::isVisible(){
 	return m_visibility;
@@ -452,9 +400,7 @@ void Console::execDPrint(std::string name){
 	}
 }
 void Console::execFPrint(std::string name){
-	
 }
-
 void Console::execEPrint(std::string name){
 	std::vector<std::string> table = m_varElements.at(name)->getPrintableState();
 	for(auto& line:table){
@@ -490,9 +436,7 @@ void Console::newDescriptor(std::string name, std::string fun){
 		if(isDescriptor(fun)){
 			print("Error : function name is a Descriptor");
 		}
-
 	}
-
 }
 void Console::newFunction(std::string name){
 	if(!isDescriptor(name)){
@@ -529,23 +473,24 @@ void Console::newMaterial(std::string name, int rank){
 		print("Error : Material name already used");
 	}
 }
-
 void Console::execMShow(std::string name){
 	m_gMgr->show(name);
 }
 void Console::execMHide(std::string name){
 	m_gMgr->hide(name);
 }
-
-
-
+void Console::execMPrint(std::string name){
+	auto result = m_varMaterials.at(name)->getResultReac();
+	for(int i = 0; i < Element::REACTION::__COUNT; i++){
+		print(std::to_string(result.at(Element::REACTION(i))),MatArchNodeView::elemColors.at(Element::REACTION(i)));
+	}
+}
 void Console::execCombine(std::string a, std::string b, std::string c){
 	if(!isVariable(c)){
 		m_variables.emplace(c,TYPE::MATERIAL);
 		if(!inMaterial(c)){
 			m_varMaterials.emplace(c,m_varMaterials.at(a)->combine(m_varMaterials.at(b)));
 			m_gMgr->addMaterial(c,m_varMaterials.at(c));
-
 		}
 	}
 	else{
@@ -559,10 +504,8 @@ std::string Console::typeToStr(TYPE t){
 	switch(t){
 		case TYPE::DESCRIPTOR:
 			return "Descriptor";
-			break;
 		case TYPE::FUNCTION:
 			return "Function";
-			break;
 		case TYPE::ELEMENT:
 			return "Element";
 		case TYPE::MATERIAL:
@@ -679,7 +622,6 @@ void Console::newCmd(std::string cmd){
 	print(m_cmds.back());	
 	m_cmdID = m_cmds.size();
 	execute(cmd);//
-
 }
 bool Console::is_num(const std::string& str){
     return !str.empty() && std::find_if(str.begin(), 
@@ -711,7 +653,11 @@ std::vector<std::string> Console::cmdCut(std::string cmd,std::vector<char> delim
 //CMD utilities ----------------------------------------------------------------------
 
 void Console::setCurrentCmd(char c){
-	int id = 0;
+	static int id = 0;
+	static std::string fracStr = "";
+	if(c != 9){	
+		fracStr = "";
+	}
 	if(c != 127 && c != 8 && c != 13 && c != 9 && c != 24 && c != 25 && c != 27){
 		m_currstr += c;
 	}
@@ -722,14 +668,16 @@ void Console::setCurrentCmd(char c){
 	}
 	else if(c == 9){
 		if(m_currstr != ">"){
-		m_currstr = autoComplete(m_currstr.substr(1,m_currstr.size()),id);
+		if(fracStr == ""){
+			fracStr = m_currstr.substr(1,m_currstr.size());
+		}
+		m_currstr = autoComplete(fracStr,id);
 		id++;	
 		}
 	}
 	else if(c == 24){
 	}
 	else if(c == 25){
-
 	}
 	else if(m_currstr.size() > 1){
 		m_currstr.pop_back();
@@ -737,7 +685,6 @@ void Console::setCurrentCmd(char c){
 	m_current.setString(m_currstr);
 }
 std::string Console::autoComplete(std::string line,int id){
-
 	std::vector<std::string> words = cmdCut(line,std::vector<char>({' ','(',')',',','.','\0'}));
 	std::string word = words.back(); 
 	std::vector<std::string> candidats;
@@ -792,14 +739,12 @@ bool Console::inDescriptors(std::string str){
 		return true;
 	}
 	return false;
-
 }
 bool Console::inFunctions(std::string str){
 	if(m_varFunctions.find(str) != m_varFunctions.end()){
 		return true;
 	}
 	return false;
-
 }
 bool Console::isVariable(std::string str){
 	if(m_variables.find(str) != m_variables.end()){
@@ -856,7 +801,6 @@ bool Console::inMaterial(std::string str){
 	return false;
 }
 
-
 //Automata detailed errors -----------------------------------------
 
 STATE Console::getInitErr(std::string msg){
@@ -890,12 +834,10 @@ STATE Console::getGetChildErr(std::string msg){
 STATE Console::getSetFunErr(std::string msg){
 	std::cout  << "ERROR : "<<msg<< " is not a F" << std::endl;
 	return STATE::ERROR;
-
 }
 STATE Console::getRemoveChildErr(std::string msg){
 	std::cout  << "ERROR : "<<msg<< " is not a D" << std::endl;
 	return STATE::ERROR;
-
 }
 STATE Console::getAddChildErr(std::string msg){
 	std::cout  << "ERROR : "<<msg<< " is not a D" << std::endl;

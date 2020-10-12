@@ -8,7 +8,8 @@ void NodeCounter::reset(){
 	NodeCounter::c =0;
 }
 
-MaterialArchView::MaterialArchView(std::shared_ptr<MaterialArch> arch):m_arch(arch){
+MaterialArchView::MaterialArchView(std::shared_ptr<MaterialArch> arch):m_arch(arch),m_updateTh(&MaterialArchView::update,this){
+	threadStatus = false;
 	initNodes();
 }
 
@@ -23,10 +24,11 @@ void MaterialArchView::draw(std::shared_ptr<sf::RenderWindow> win){
 	}
 }
 
-void MaterialArchView::update(double dt){
+void MaterialArchView::update(){
 	for (auto node : g_nodes) {
-		node->update(dt);
+		node->update();
 	}
+	threadStatus = false;
 }
 
 void print(std::shared_ptr<MatArchNode> cnode){
@@ -66,5 +68,22 @@ void MaterialArchView::nodeBuild(std::shared_ptr<MatArchNode> cnode, std::vector
 	
 	nodesCollec.push_back(std::make_shared<MatArchNodeView>(cnode));
 	nodesList.push_back(cnode);
+}
+
+void MaterialArchView::setPosition(sf::Vector2f pos, sf::Vector2f dim){
+	for (auto node : g_nodes) {
+		node->setPosition(pos,dim);
+	}	
+}
+
+void MaterialArchView::startUpdateTh(){
+	threadStatus = true;
+	m_updateTh.launch();
+	//m_updateTh.wait();
+}
+void MaterialArchView::waitUpdateTh(){
+	//if(!threadStatus){
+		m_updateTh.wait();
+	//}
 }
 

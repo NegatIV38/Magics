@@ -6,6 +6,7 @@
 #include <queue>
 #include <vector>
 
+
 class MaterialArch
 {
 private:
@@ -27,6 +28,10 @@ public:
 	
 	std::shared_ptr<MaterialArch> combine(std::shared_ptr<MaterialArch> other);
 	MaterialArch operator+(const MaterialArch& other);	
+
+
+
+
 
 	template <typename T>
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode, T& extObject), T& extObject);

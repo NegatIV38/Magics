@@ -17,7 +17,7 @@ enum TYPE{
 
 enum STATE{
 	ERROR,
-	INIT,CLEAR, VAR_LIST, EXIT, COLORS, 
+	INIT,CLEAR, VAR_LIST, EXIT, COLORS,HIDE_ALL, 
 	NEW_DESC, DESC_NAME, DESC_FUN,
 	NEW_FUN, FUN_NAME,
 	VAR_D, 
@@ -33,7 +33,7 @@ enum STATE{
 	E_ABSORB, E_ABSORB_ELEM,
 
 	NEW_MAT, MAT_NAME, MAT_RANK,
-	VAR_M, M_SHOW, M_HIDE,
+	VAR_M, M_SHOW, M_HIDE, M_PRINT,
 	M_PLUS, M_PLUS_ARG, M_PLUS_EQUAL, M_PLUS_NEW_MAT
 
 
@@ -88,6 +88,7 @@ class Console{
 		void execMShow(std::string name);
 		void execMHide(std::string name);
 		void execCombine(std::string a, std::string b, std::string c);
+		void execMPrint(std::string name);
 		
 		STATE getInitErr(std::string msg);
 		STATE getNewDescErr(std::string msg);
