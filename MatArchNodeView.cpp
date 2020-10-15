@@ -92,12 +92,18 @@ void MatArchNodeView::update(){
 
 	float delta = (2*PI_V)/Element::REACTION::__COUNT;
 	g_shape.setPosition(g_shape.getPosition() + sf::Vector2f(m_speedX,m_speedY));	
-	if(g_shape.getPosition().x < m_pos.x-m_bounds.x/2 || g_shape.getPosition().x>m_pos.x+m_bounds.x/2){
-		m_speedX *=-1;
+	if(g_shape.getPosition().x < m_pos.x-m_bounds.x/2-m_speedX || g_shape.getPosition().x>m_pos.x+m_bounds.x/2-m_speedX){
+		m_speedX *=-1*((50+rand()%100)/100.f);
 	}
-	if(g_shape.getPosition().y < m_pos.y-m_bounds.y/2 || g_shape.getPosition().y>m_pos.y+m_bounds.y/2){
-		m_speedY *= -1;
+	if(g_shape.getPosition().y < m_pos.y-m_bounds.y/2-m_speedY || g_shape.getPosition().y>m_pos.y+m_bounds.y/2-m_speedY){
+		m_speedY *= -1*((50+rand()%100)/100.f);
 	}
+	if(std::abs(m_speedX) < 0.005){
+		m_speedX *= 10;		
+	}
+	if(std::abs(m_speedX) < 0.005){
+		m_speedY *= 10;
+	}	
 	g_lines->clear();
 	g_values.clear();
 	for(std::size_t i = 0; i < linkedViews.size(); i++){

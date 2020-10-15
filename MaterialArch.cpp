@@ -112,6 +112,19 @@ std::map<Element::REACTION, float> MaterialArch::getResultReac(){
 	   return ret;*/
 
 }
+std::map<Element::REACTION,float> MaterialArch::getReacOfSign(bool positive){
+		std::map<Element::REACTION,float> ret;
+	for(int i = 0; i < Element::REACTION::__COUNT; i++){
+		ret.emplace(Element::REACTION(i),0.f);
+	}
+	routeAllNodes<std::map<Element::REACTION,float>,bool>(sumStatsSign,ret,positive);
+
+	for(int i = 0; i < Element::REACTION::__COUNT; i++){
+		ret.at(Element::REACTION(i)) /=2.f;
+	}
+	return ret;
+
+}
 
 void MaterialArch::generate(int nbElem){
 	std::vector<std::shared_ptr<MatArchNode>> nodeList;
@@ -166,10 +179,21 @@ void MaterialArch::generate(int nbElem){
 void MaterialArch::sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum){
 	auto stats = cnode->getResultReac();
 	for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
-		sum.at(Element::REACTION(j)) += stats.at(Element::REACTION(j));
+		if(cnode->getNextNodes().at(Element::REACTION(j))!= nullptr){
+			sum.at(Element::REACTION(j)) += stats.at(Element::REACTION(j));
+		}
 	}	
 }
-
+void MaterialArch::sumStatsSign(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum,bool& positive){
+	auto stats = cnode->getResultReac();
+	for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
+		if(cnode->getNextNodes().at(Element::REACTION(j))!= nullptr){
+			if((positive && stats.at(Element::REACTION(j)) > 0)||(!positive && stats.at(Element::REACTION(j))<0)){
+				sum.at(Element::REACTION(j)) += stats.at(Element::REACTION(j));
+			}
+		}
+	}	
+}
 void MaterialArch::setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>& ret){
 	auto nxt = cnode->getNextNodes();
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){

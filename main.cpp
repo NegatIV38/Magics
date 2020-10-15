@@ -46,6 +46,16 @@ int main()
 						cwin.downArrow();
 					}
 				}
+				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageDown)){
+					if(cwin.isVisible()){
+						cwin.pageDown();
+					}
+				}
+				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageUp)){
+					if(cwin.isVisible()){
+						cwin.pageUp();
+					}
+				}
 			}
 			if(event.type == sf::Event::TextEntered){
 				if(cwin.isVisible()){

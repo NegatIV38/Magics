@@ -1,5 +1,7 @@
 #include "Console.h"
 #include <SFML/Graphics/Color.hpp>
+#include <cmath>
+#include <exception>
 #include <map>
 #include <memory>
 #include <string>
@@ -8,15 +10,6 @@ std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","F
 
 //Constructors
 
-Console::Console(){
-	m_visibility = false;
-	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(800,200));
-	m_background->setFillColor(sf::Color::Black);
-	m_background->setOutlineColor(sf::Color::White);
-	m_background->setOutlineThickness(5);
-	m_font.loadFromFile("Minecraftia-Regular.ttf");
-	m_charSize = 12;
-}
 Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)	:m_parent(win), m_gMgr(gmgr){
 	m_visibility = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
@@ -32,6 +25,8 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<Gr
 	m_current.setCharacterSize(m_charSize);
 	m_current.setPosition(0,(getHistMaxSize()+1)*m_charSize);	
 	m_cmdID = 0;
+	histoShift = 0;
+	pageShift = 5;
 }
 Console::~Console(){
 }
@@ -349,7 +344,7 @@ void Console::update(){
 }
 void Console::draw(){
 	m_parent->draw(*m_background);
-	for(int i = 0; i < m_history.size(); i++){
+	for(int i = std::max(0,int(m_history.size()-getHistMaxSize()-histoShift)) ; i < m_history.size()-histoShift; i++){
 		m_parent->draw(*m_history.at(i));
 	}
 	m_parent->draw(m_current);
@@ -369,8 +364,8 @@ bool Console::isVisible(){
 	return m_visibility;
 }
 void Console::updateHistory(){
-	for(int i = m_history.size()-1; i >= std::max(0,int(m_history.size()-1-getHistMaxSize())); i--){
-		m_history.at(i)->setPosition(2,(getHistMaxSize()-(m_history.size()-1-i))*m_charSize);
+	for(int i = m_history.size()-1; i >= std::max(0,int(m_history.size()-1-histoShift-getHistMaxSize())); i--){
+		m_history.at(i)->setPosition(2,(getHistMaxSize()+histoShift-(m_history.size()-1-i))*m_charSize);
 	}
 }
 int Console::getHistMaxSize(){
@@ -399,7 +394,7 @@ void Console::execDPrint(std::string name){
 		print(line);
 	}
 }
-void Console::execFPrint(std::string name){
+ void Console::execFPrint(std::string name){
 }
 void Console::execEPrint(std::string name){
 	std::vector<std::string> table = m_varElements.at(name)->getPrintableState();
@@ -481,8 +476,11 @@ void Console::execMHide(std::string name){
 }
 void Console::execMPrint(std::string name){
 	auto result = m_varMaterials.at(name)->getResultReac();
+	auto positives = m_varMaterials.at(name)->getReacOfSign(true);
+	auto negatives = m_varMaterials.at(name)->getReacOfSign(false);
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		print(std::to_string(result.at(Element::REACTION(i))),MatArchNodeView::elemColors.at(Element::REACTION(i)));
+		print(std::to_string(int(std::nearbyint(negatives.at(Element::REACTION(i)))))+" + "+std::to_string(int(std::nearbyint(positives.at(Element::REACTION(i)))))+" = "+std::to_string(
+					int(std::nearbyint(result.at(Element::REACTION(i))))),MatArchNodeView::elemColors.at(Element::REACTION(i)));
 	}
 }
 void Console::execCombine(std::string a, std::string b, std::string c){
@@ -730,6 +728,21 @@ void Console::downArrow(){
 		m_currstr = ">"+ m_cmds.at(m_cmdID);
 	}
 	m_current.setString( m_currstr);
+}
+void Console::pageUp(){
+	if(histoShift < int(m_history.size()) - pageShift){
+		histoShift += pageShift;
+	}
+	updateHistory();
+}
+void Console::pageDown(){
+	if(histoShift > pageShift){
+		histoShift -= pageShift;
+	}
+	else{
+		histoShift = 0;
+	}
+	updateHistory();
 }
 
 //Var existence check -------------------------------------------------

@@ -42,7 +42,6 @@ enum STATE{
 class Console{
 	
 	public:
-		Console();
 		Console(const std::shared_ptr<sf::RenderWindow>& win, std::shared_ptr<GraphManager> gmgr);
 		~Console();
 
@@ -58,7 +57,9 @@ class Console{
 		void execute(std::string cmd);
 		void upArrow();
 		void downArrow();
-
+		void pageUp();
+		void pageDown();
+		
 	private:
 
 		std::string autoComplete(std::string line, int id);
@@ -128,6 +129,8 @@ class Console{
 		sf::Font m_font;
 		int m_charSize;
 		int m_cmdID;
+		int histoShift;
+		int pageShift;
 		std::map<std::string,TYPE> m_variables;
 		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
 		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
