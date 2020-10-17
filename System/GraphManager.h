@@ -1,7 +1,7 @@
 #ifndef GRAPHMANAGER_H
 #define GRAPHMANAGER_H
 
-#include "MaterialArchView.h"
+#include "../Physics/MaterialArchView.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <memory>

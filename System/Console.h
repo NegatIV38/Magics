@@ -4,11 +4,11 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <memory>
-#include "Descripteur.h"
-#include "Function.h"
-#include "Element.h"
+#include "../Magics/Descripteur.h"
+#include "../Magics/Function.h"
+#include "../Physics/Element.h"
 #include "GraphManager.h"
-#include "MaterialArch.h"
+#include "../Physics/MaterialArch.h"
 
 
 enum TYPE{

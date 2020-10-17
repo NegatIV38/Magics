@@ -1,13 +1,13 @@
 #include <SFML/Graphics.hpp>
-#include "Descripteur.h"
-#include "Function.h"
-#include "Console.h"
-#include "Element.h"
-#include "Material.h"
+#include "Magics/Descripteur.h"
+#include "Magics/Function.h"
+#include "System/Console.h"
+#include "Physics/Element.h"
+#include "Physics/Material.h"
 #include <ctime>
 #include <memory>
-#include "MaterialArchView.h"
-#include "GraphManager.h"
+#include "Physics/MaterialArchView.h"
+#include "System/GraphManager.h"
 
 int main()
 {

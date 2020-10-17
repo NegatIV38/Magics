@@ -35,19 +35,17 @@ MatArchNodeView::MatArchNodeView(std::shared_ptr<MatArchNode> node):m_node(node)
 	m_font.loadFromFile("Minecraftia-Regular.ttf");
 
 	g_lines = std::make_shared<sf::VertexArray>(sf::Lines);	
-	m_speedX = -250+rand()%500;
-	m_speedY = -250+rand()%500;
-	m_speedX /= 10000;
-	m_speedY /= 10000;
+	m_speedX = -500+rand()%1000;
+	m_speedY = -500+rand()%1000;
+	m_speedX /= 5000.f;
+	m_speedY /= 5000.f;
 	initShape();
 	initInputs();
 	m_id = -1;
 }
-
 MatArchNodeView::~MatArchNodeView(){
 
 }
-
 void MatArchNodeView::initShape(){
 	g_shape.setRadius(10);
 	g_shape.setFillColor(sf::Color::White);
@@ -61,8 +59,6 @@ void MatArchNodeView::initInputs(){
 		g_inputs.back().setFillColor(elemColors.at(Element::REACTION(i)));
 	}
 }
-
-
 void MatArchNodeView::printLinks(){
 	std::cout << std::endl <<"Reaction LIST begin : "<< m_id << std::endl;
 	for(std::size_t i = 0; i < linkedReac.size(); i++){
@@ -93,17 +89,23 @@ void MatArchNodeView::update(){
 	float delta = (2*PI_V)/Element::REACTION::__COUNT;
 	g_shape.setPosition(g_shape.getPosition() + sf::Vector2f(m_speedX,m_speedY));	
 	if(g_shape.getPosition().x < m_pos.x-m_bounds.x/2-m_speedX || g_shape.getPosition().x>m_pos.x+m_bounds.x/2-m_speedX){
-		m_speedX *=-1*((50+rand()%100)/100.f);
+		m_speedX *=-1*((50+rand()%150)/100.f);
+		if(std::abs(m_speedX) < 0.001){
+			m_speedX *= 10;		
+		}
+		if(std::abs(m_speedX) > 1){
+			m_speedX /= 10;		
+		}
 	}
 	if(g_shape.getPosition().y < m_pos.y-m_bounds.y/2-m_speedY || g_shape.getPosition().y>m_pos.y+m_bounds.y/2-m_speedY){
-		m_speedY *= -1*((50+rand()%100)/100.f);
+		m_speedY *= -1*((50+rand()%150)/100.f);
+		if(std::abs(m_speedY) < 0.01){
+			m_speedY *= 10;
+		}
+		if(std::abs(m_speedY) > 0.1){
+			m_speedY /= 10;
+		}
 	}
-	if(std::abs(m_speedX) < 0.005){
-		m_speedX *= 10;		
-	}
-	if(std::abs(m_speedX) < 0.005){
-		m_speedY *= 10;
-	}	
 	g_lines->clear();
 	g_values.clear();
 	for(std::size_t i = 0; i < linkedViews.size(); i++){
