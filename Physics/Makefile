@@ -1,7 +1,7 @@
 CC=g++ -g
 LIB=-lsfml-graphics -lsfml-window -lsfml-system
 
-all: Element.o MaterialArch.o MatArchNode.o MaterialArchView.o MatArchNodeView.o Material.o
+all: Element.o MaterialPop.o MaterialArch.o MatArchNode.o MaterialArchView.o MatArchNodeView.o 
 
 
 %.o: %.cpp
@@ -9,8 +9,8 @@ all: Element.o MaterialArch.o MatArchNode.o MaterialArchView.o MatArchNodeView.o
 
 
 Element.o:
+MaterialPop.o:
 MaterialArch.o:
 MatArchNode.o:
 MaterialArchView.o:
 MatArchNodeView.o:
-Material.o:

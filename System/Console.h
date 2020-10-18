@@ -8,7 +8,7 @@
 #include "../Magics/Function.h"
 #include "../Physics/Element.h"
 #include "GraphManager.h"
-#include "../Physics/MaterialArch.h"
+#include "../Physics/MaterialPop.h"
 
 
 enum TYPE{
@@ -135,7 +135,8 @@ class Console{
 		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
 		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
 		std::map<std::string, std::shared_ptr<Element>> m_varElements;
-		std::map<std::string, std::shared_ptr<MaterialArch>> m_varMaterials;
+	//	std::map<std::string, std::shared_ptr<MaterialArch>> m_varMaterials;
+		std::shared_ptr<MaterialPop> m_matPop;
 		std::shared_ptr<GraphManager> m_gMgr;
 }; 
 

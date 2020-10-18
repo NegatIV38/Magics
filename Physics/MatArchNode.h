@@ -17,6 +17,8 @@ public:
 	MatArchNode();	
 	virtual ~MatArchNode();
 	
+	void update();
+
 	void link(Element::REACTION r, std::shared_ptr<MatArchNode> node);
 	void unlink(Element::REACTION r);
 	std::map<Element::REACTION, float> getResultReac();

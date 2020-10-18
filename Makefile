@@ -9,7 +9,7 @@ packs:
 	+$(MAKE) -C Physics
 	+$(MAKE) -C System
 
-main: System/GraphManager.o Physics/MaterialArch.o Physics/MatArchNode.o  Physics/MaterialArchView.o Physics/MatArchNodeView.o Physics/Element.o  System/Console.o Magics/Function.o Physics/Material.o Magics/Descripteur.o main.o
+main: System/GraphManager.o Physics/MaterialPop.o Physics/MaterialArch.o Physics/MatArchNode.o  Physics/MaterialArchView.o Physics/MatArchNodeView.o Physics/Element.o  System/Console.o Magics/Function.o Magics/Descripteur.o main.o
 
 	$(CC) $^ -o $@ $(LIB)
 

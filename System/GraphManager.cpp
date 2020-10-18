@@ -11,22 +11,23 @@ double GraphManager::dt = 0;
 sf::Clock GraphManager::clock;
 
 GraphManager::GraphManager(){
-	m_visibilityCounter = 0;
+//	m_visibilityCounter = 0;
 }
 
 GraphManager::~GraphManager(){
 
 }
 
-void GraphManager::addMaterial(std::string name,std::shared_ptr<MaterialArch> arch){
+/*void GraphManager::addMaterial(std::string name,std::shared_ptr<MaterialArch> arch){
 	m_matViews.emplace(name,std::make_shared<MaterialArchView>(arch));	
 	m_visibility.emplace(name, false);
 
 
-}
+}*/
 
 void GraphManager::update(){
-	for (auto mat : m_matViews) {
+	m_matPop->update();
+/*	for (auto mat : m_matViews) {
 		if(m_visibility.at(mat.first)){
 			//ths.push_back(sf::Thread(&MaterialArchView::update,mat.second.get()));
 			//ths.back().launch();
@@ -34,11 +35,12 @@ void GraphManager::update(){
 			mat.second->startUpdateTh();
 		}
 	}
-
+*/
 }
 
 void GraphManager::draw(std::shared_ptr<sf::RenderWindow> win){
-	for (auto mat: m_matViews) {
+	m_matPop->draw(win);
+	/*for (auto mat: m_matViews) {
 		if(m_visibility.at(mat.first)){
 			mat.second->waitUpdateTh(); //!
 		
@@ -49,31 +51,35 @@ void GraphManager::draw(std::shared_ptr<sf::RenderWindow> win){
 			mat.second->draw(win);
 		
 		}
-	}
+	}*/
 
 }
 
 void GraphManager::hide(std::string name){
-	bool b = m_visibility.at(name);
+	/*bool b = m_visibility.at(name);
 	m_visibility.at(name) = false;
 	if(b != m_visibility.at(name)){
 		m_visibilityCounter--;
-	}
+	}*/
 }
 
 void GraphManager::hideAll(){
-	m_visibilityCounter = 0;
+	/*m_visibilityCounter = 0;
 	for (auto& i : m_visibility) {
 		i.second = false;
-	}
+	}*/
 }
 
 void GraphManager::show(std::string name){
 
-	m_matViews.at(name)->setPosition(sf::Vector2f(m_visibilityCounter*600+300,300));
-	bool b = m_visibility.at(name);
+	//m_matViews.at(name)->setPosition(sf::Vector2f(m_visibilityCounter*600+300,300));
+	/*bool b = m_visibility.at(name);
 	m_visibility.at(name) = true;
 	if(b != m_visibility.at(name)){
 		m_visibilityCounter++;
-	}	
+	}*/	
+}
+
+void GraphManager::setMaterialPop(std::shared_ptr<MaterialPop> pop){
+	m_matPop = pop;
 }

@@ -27,6 +27,8 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<Gr
 	m_cmdID = 0;
 	histoShift = 0;
 	pageShift = 5;
+	m_matPop = std::make_shared<MaterialPop>();
+	m_gMgr->setMaterialPop(m_matPop);
 }
 Console::~Console(){
 }
@@ -92,20 +94,19 @@ void Console::execute(std::string cmd){
 		}
 		if(cState == STATE::E_PRINT){
 			execEPrint(words.at(idWord-1));
-			m_varElements.at(words.at(idWord-1))->print();
+			//m_varElements.at(words.at(idWord-1))->print();
 		}	
 		if(cState == STATE::E_RAND){
 			m_varElements.at(words.at(idWord-1))->randomize();
 		}
 		if(cState == STATE::E_EXALT_WEIGHT){
-			m_varElements.at(words.at(idWord-3))->exalt(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+			//m_varElements.at(words.at(idWord-3))->exalt(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
 		}
 		if(cState == STATE::E_INHIB_WEIGHT){
-			m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+			//m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
 		}
 		if(cState == STATE::MAT_RANK){
 			newMaterial(words.at(idWord-1),std::stoi(words.at(idWord)));
-			m_gMgr->addMaterial(words.at(idWord-1),m_varMaterials.at(words.at(idWord-1)));
 		}
 		if(cState == STATE::M_SHOW){
 			execMShow(words.at(idWord-1));
@@ -397,10 +398,10 @@ void Console::execDPrint(std::string name){
  void Console::execFPrint(std::string name){
 }
 void Console::execEPrint(std::string name){
-	std::vector<std::string> table = m_varElements.at(name)->getPrintableState();
+	/*std::vector<std::string> table = m_varElements.at(name)->getPrintableState();
 	for(auto& line:table){
 		print(line);
-	}
+	}*/
 }
 void Console::execDAddChild(std::string desc, std::string child){
 	m_varDescriptors.at(desc)->addChild(m_varDescriptors.at(child));
@@ -460,8 +461,9 @@ void Console::newMaterial(std::string name, int rank){
 	if(!isVariable(name)){
 		m_variables.emplace(name,TYPE::MATERIAL);
 		if(!inMaterial(name)){
-			m_varMaterials.emplace(name,std::make_shared<MaterialArch>());
-			m_varMaterials.at(name)->generate(rank);
+			std::shared_ptr<MaterialArch> mat = std::make_shared<MaterialArch>();
+			mat->generate(rank);
+			m_matPop->add(name,mat);
 		}
 	}
 	else{
@@ -475,9 +477,9 @@ void Console::execMHide(std::string name){
 	m_gMgr->hide(name);
 }
 void Console::execMPrint(std::string name){
-	auto result = m_varMaterials.at(name)->getResultReac();
-	auto positives = m_varMaterials.at(name)->getReacOfSign(true);
-	auto negatives = m_varMaterials.at(name)->getReacOfSign(false);
+	auto result = m_matPop->get(name)->getResultReac();
+	auto positives = m_matPop->get(name)->getReacOfSign(true);
+	auto negatives = m_matPop->get(name)->getReacOfSign(false);
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){
 		print(std::to_string(int(std::nearbyint(negatives.at(Element::REACTION(i)))))+" + "+std::to_string(int(std::nearbyint(positives.at(Element::REACTION(i)))))+" = "+std::to_string(
 					int(std::nearbyint(result.at(Element::REACTION(i))))),MatArchNodeView::elemColors.at(Element::REACTION(i)));
@@ -487,8 +489,7 @@ void Console::execCombine(std::string a, std::string b, std::string c){
 	if(!isVariable(c)){
 		m_variables.emplace(c,TYPE::MATERIAL);
 		if(!inMaterial(c)){
-			m_varMaterials.emplace(c,m_varMaterials.at(a)->combine(m_varMaterials.at(b)));
-			m_gMgr->addMaterial(c,m_varMaterials.at(c));
+			m_matPop->add(c,m_matPop->get(a)->combine(m_matPop->get(b)));
 		}
 	}
 	else{
@@ -808,7 +809,7 @@ bool Console::isMaterial(std::string str){
 	return false;
 }
 bool Console::inMaterial(std::string str){
-	if(m_varMaterials.find(str) != m_varMaterials.end()){
+	if(m_matPop->find(str)){
 		return true;	
 	}
 	return false;

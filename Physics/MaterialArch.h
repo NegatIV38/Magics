@@ -2,23 +2,29 @@
 #define MATERIALARCH_H
 
 #include "MatArchNode.h"
+#include <SFML/Graphics.hpp>
 #include <memory>
 #include <queue>
 #include <vector>
-
 
 class MaterialArch
 {
 private:
 	std::shared_ptr<MatArchNode> m_root;	
+	sf::Clock m_clock;
 
 	static void sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum);
 	static void sumStatsSign(std::shared_ptr<MatArchNode> cnode,std::map<Element::REACTION,float>& sum, bool& positive);
 	static void setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>& ret);
+	static void stepNodes(std::shared_ptr<MatArchNode> cnode);
 
+
+	void updateStep();
 public:
 	MaterialArch();
 	virtual ~MaterialArch();
+
+	void update();
 
 	void setRoot(std::shared_ptr<MatArchNode> r);
 	std::shared_ptr<MatArchNode> getRoot();
@@ -30,10 +36,6 @@ public:
 	
 	std::shared_ptr<MaterialArch> combine(std::shared_ptr<MaterialArch> other);
 	MaterialArch operator+(const MaterialArch& other);	
-
-
-
-
 
 	template <typename T>
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode, T& extObject), T& extObject);
@@ -81,8 +83,6 @@ void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNod
 
 	}
 }
-
-
 template <typename T,typename U>
 void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode,T& extObjectA, U& extObjectB),T& extObjectA, U& extObjectB){
 	std::vector<std::shared_ptr<MatArchNode>> visited;

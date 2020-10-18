@@ -3,25 +3,21 @@
 #include "Magics/Function.h"
 #include "System/Console.h"
 #include "Physics/Element.h"
-#include "Physics/Material.h"
 #include <ctime>
 #include <memory>
 #include "Physics/MaterialArchView.h"
 #include "System/GraphManager.h"
 
-int main()
-{
+int main(){
 	srand(time(nullptr));
 	std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(sf::VideoMode(1800, 600), "SFML works!");
 	Descripteur d("test",std::make_shared<Function>("objet"));
-
 	std::map<Element::REACTION, float> need;
 	for(int i = 0; i < int(Element::REACTION::__COUNT); i++){
 		need.emplace(Element::REACTION(i), i);
 	}
 	std::shared_ptr<GraphManager> gmgr = std::make_shared<GraphManager>();
 	Console cwin(window, gmgr);
-
 	while (window->isOpen())
 	{
 		sf::Event event;

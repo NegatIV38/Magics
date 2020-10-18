@@ -5,22 +5,16 @@
 #include <vector>
 
 MaterialArch::MaterialArch(){
-
 }
-
 MaterialArch::~MaterialArch(){
-
 }
-
 void MaterialArch::setRoot(std::shared_ptr<MatArchNode> r){
 	//if r is linked to root ->
 	m_root = r;
 }
-
 std::shared_ptr<MatArchNode> MaterialArch::getRoot(){
 	return m_root;
 }
-
 void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode)){
 	std::vector<std::shared_ptr<MatArchNode>> visited;
 	std::deque<std::shared_ptr<MatArchNode>> toVisit;
@@ -30,9 +24,7 @@ void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNod
 	while(toVisit.size() > 0){
 		auto current = toVisit.front();
 		toVisit.pop_front();
-
 		fun(current);
-
 		visited.push_back(current);
 		for(int i = 0; i < Element::REACTION::__COUNT; i++){
 			if(current->getNode(Element::REACTION(i))!= nullptr){
@@ -57,60 +49,18 @@ void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNod
 				}
 			}
 		}
-
 	}
 }
-
 std::map<Element::REACTION, float> MaterialArch::getResultReac(){
 	std::map<Element::REACTION,float> ret;
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){
 		ret.emplace(Element::REACTION(i),0.f);
 	}
-
 	routeAllNodes<std::map<Element::REACTION,float>>(sumStatsNodes,ret);
-
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){
 		ret.at(Element::REACTION(i)) /=2.f;
 	}
 	return ret;
-
-
-	/*
-	   std::vector<std::shared_ptr<MatArchNode>> visited;
-	   std::queue<std::shared_ptr<MatArchNode>> toVisit;
-	   std::map<Element::REACTION,float> ret;
-	   for(int i = 0; i < Element::REACTION::__COUNT; i++){
-	   ret.emplace(Element::REACTION(i),0.f);
-	   }
-	   toVisit.push(m_root);
-	   while(toVisit.size() > 0){
-	   auto current = toVisit.front();
-	   toVisit.pop();
-
-	   auto stats = current->getResultReac();
-	   for(int i = 0; i < Element::REACTION::__COUNT; i++){
-	   ret.at(Element::REACTION(i)) += stats.at(Element::REACTION(i)) ;
-	   }
-
-	   for(int i = 0; i < Element::REACTION::__COUNT; i++){
-	   bool hasBeenVisited = false;
-	   for (int j = 0; j < visited.size() || hasBeenVisited; j++) {
-	   if(current->getNextNodes().at(Element::REACTION(i))== visited.at(j)){
-	   hasBeenVisited = true;
-	   }
-	   }
-	   if(!hasBeenVisited){
-	   toVisit.push(current->getNextNodes().at(Element::REACTION(i)));
-	   }
-	   }
-
-	   visited.push_back(current);
-	   }
-	   for(int i = 0; i < Element::REACTION::__COUNT; i++){
-	   ret.at(Element::REACTION(i)) /=2.f;
-	   }
-	   return ret;*/
-
 }
 std::map<Element::REACTION,float> MaterialArch::getReacOfSign(bool positive){
 		std::map<Element::REACTION,float> ret;
@@ -123,9 +73,7 @@ std::map<Element::REACTION,float> MaterialArch::getReacOfSign(bool positive){
 		ret.at(Element::REACTION(i)) /=2.f;
 	}
 	return ret;
-
 }
-
 void MaterialArch::generate(int nbElem){
 	std::vector<std::shared_ptr<MatArchNode>> nodeList;
 	if(m_root == nullptr){
@@ -135,7 +83,6 @@ void MaterialArch::generate(int nbElem){
 		for (int i = 1; i < nbElem; ++i) {
 			std::shared_ptr<MatArchNode> nextNode = std::make_shared<MatArchNode>();
 			nextNode->generate();
-
 			nodeList.push_back(nextNode);
 		}
 		if(nodeList.size() < 2){
@@ -143,7 +90,6 @@ void MaterialArch::generate(int nbElem){
 		}
 		for (auto node : nodeList) {
 			bool canLink = false;
-
 			auto linkList = node->getNextNodes();
 			for(int i = 0; i < Element::REACTION::__COUNT; i++){
 				if(linkList.at(Element::REACTION(i)) == nullptr){
@@ -175,7 +121,6 @@ void MaterialArch::generate(int nbElem){
 		}
 	}
 }
-
 void MaterialArch::sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum){
 	auto stats = cnode->getResultReac();
 	for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
@@ -202,7 +147,6 @@ void MaterialArch::setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Ele
 		}
 	}
 }
-
 std::map<Element::REACTION, std::vector<std::shared_ptr<MatArchNode>>> MaterialArch::getFreeLinks(){
 	std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>> ret;
 	for(int i = 0; i < Element::REACTION::__COUNT; i++){
@@ -210,9 +154,7 @@ std::map<Element::REACTION, std::vector<std::shared_ptr<MatArchNode>>> MaterialA
 	}
 	routeAllNodes<std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>>(setFreeLinks,ret);
 	return ret;
-
 }
-
 MaterialArch MaterialArch::operator+(const MaterialArch& other){
 	MaterialArch ret = *this;
 	MaterialArch o = other;
@@ -234,11 +176,9 @@ MaterialArch MaterialArch::operator+(const MaterialArch& other){
 					}
 				}
 			}
-			
 			if(oFree.at(Element::REACTION(i)).size() > 0 && retFree.at(Element::REACTION(i)).at(j)->getNode(Element::REACTION(i)) == nullptr && oFree.at(Element::REACTION(i)).at(best)->getNode(Element::REACTION(i))==nullptr){
 				cval = oFree.at(Element::REACTION(i)).at(best)->getElementRawValue(Element::REACTION(i));
 				if( !((val > 0 && cval > 0) || (val < 0 && cval < 0))){
-					
 					retFree.at(Element::REACTION(i)).at(j)->link(Element::REACTION(i),oFree.at(Element::REACTION(i)).at(best));
 				}
 			}
@@ -246,10 +186,19 @@ MaterialArch MaterialArch::operator+(const MaterialArch& other){
 	}
 	return ret;
 }
-
 std::shared_ptr<MaterialArch> MaterialArch::combine(std::shared_ptr<MaterialArch> other){
 	MaterialArch sum = *this+*other;
 	return std::make_shared<MaterialArch>(std::move(sum));
 }
-
-
+void MaterialArch::update(){
+	if(m_clock.getElapsedTime().asSeconds() >= 1){
+		m_clock.restart();
+		updateStep();
+	}
+}
+void MaterialArch::updateStep(){
+	routeAllNodes(stepNodes);
+} 
+void MaterialArch::stepNodes(std::shared_ptr<MatArchNode> cnode){
+	cnode->update();
+}

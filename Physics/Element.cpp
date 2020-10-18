@@ -3,258 +3,82 @@
 Element::Element(){
 	initStable();	
 }
-
 Element::Element(int rank){
 	initPower(rank);
 }
-
 Element::~Element(){
-
 }
-
 void Element::initStable(){
-	m_activation.clear();
-	m_resistance.clear();
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		m_activation.emplace(REACTION(i),1.0f);
-		m_resistance.emplace(REACTION(i),1.0f);
+	for (int i = 0; i < REACTION::__COUNT; ++i) {
+		m_reactions.emplace(REACTION(i),1.f);
 	}
 }
-
-std::vector<std::string> Element::getPrintableState(){
-	std::vector<std::string> ret;
-	std::string space = "\t\t\t";
-	std::string line = space;
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		if(REACTION(i) == REACTION::GEL || REACTION(i) == REACTION:: INFLAMMATION){
-			line += space;
-		}
-		line += ("\t" +reacToStr(REACTION(i)));
-		
-	}
-	ret.push_back(line);
-	line = "ACT.";
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		line += (space + std::to_string(m_activation.at(REACTION(i))));
-	}
-	ret.push_back(line);
-	line = "RES.";
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		line += (space + std::to_string(m_resistance.at(REACTION(i))));
-	}
-	ret.push_back(line);
-;
-	line = "SUM.";
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		line += (space + std::to_string(m_activation.at(REACTION(i))-m_resistance.at(REACTION(i))));
-	}
-	ret.push_back(line);
-	return ret;
-}
-
-void Element::print(){
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		std::cout << reacToStr(REACTION(i)) << " :\tActiv: " <<m_activation.at(REACTION(i)) << " \tResist: "<< m_resistance.at(REACTION(i))<< " \tSum: "<< m_activation.at(REACTION(i))- m_resistance.at(REACTION(i))<<std::endl;
-	}
-
-	std::cout << "STATS : --------------------------------"<< std::endl;
-	float meanA=0, meanR=0, meanS = 0;
-	int max1=0, max2=0, max3=0;
-	std::vector<float> s;
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		meanA += m_activation.at(REACTION(i));
-		meanR += m_resistance.at(REACTION(i)); 
-		meanS += m_activation.at(REACTION(i))- m_resistance.at(REACTION(i));
-		s.push_back(m_activation.at(REACTION(i))-m_resistance.at(REACTION(i)));
-		
-	}
-	for(int j = 0; j < s.size(); j++){
-		if(s.at(j) > s.at(max1)){
-			max1=j;
-		}
-	}
-	for(int j = 0; j < s.size(); j++){
-		if((s.at(j) > s.at(max2) || max2 == max1)&& j != max1){
-			max2=j;
-		}
-	}
-	for(int j = 0; j < s.size(); j++){
-		if((s.at(j) > s.at(max3) || max3==max2 || max3==max1)&& j!=max1 && j!=max2){
-		max3=j;
-	}
-	}
-	if(s.at(max1) < 1){
-		max1= REACTION::__COUNT;
-	}
-	if(s.at(max2) < 1){
-		max2= REACTION::__COUNT;
-	}
-
-	if(s.at(max3) < 1){
-		max3= REACTION::__COUNT;
-	}
-	meanA /= REACTION::__COUNT;
-	meanR /= REACTION::__COUNT;
-	meanS /= REACTION::__COUNT;
-	std::cout << "MEAN :\t" << meanA << "\t\t" << meanR << "\t\t" << meanS << std::endl;
-	std::cout << "MAX :\tMAX1 : " << reacToStr(REACTION(max1)) << "\t\tMAX2: " << reacToStr(REACTION(max2))<< "\t\tMAX3 : " << reacToStr(REACTION(max3)) << std::endl;
-}
-
 void Element::randomize(){
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		m_activation.at(REACTION(i)) = (rand()%1000)/100.f;
-		m_resistance.at(REACTION(i)) = (rand()%1000)/100.f;
+		m_reactions.at(REACTION(i)) =( -500+(rand()%1000))/100.f;
 	}	
 }
 void Element::initPower(int rank , bool random){
-	m_activation.clear();
-	m_resistance.clear();
+	m_reactions.clear();
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		if(random){
-			m_activation.emplace(REACTION(i) , (rand()%(rank*1000))/1000.f);
-			m_resistance.emplace(REACTION(i) , (rand()%(rank*1000))/1000.f);
+			m_reactions.emplace(REACTION(i) , (rand()%(rank*1000))/1000.f);
 		}
 		else{
-			m_activation.emplace(REACTION(i) , rank);
-			m_resistance.emplace(REACTION(i) , rank);
-		
+			m_reactions.emplace(REACTION(i) , rank);
 		}
 	}
 } 
-
 void Element::null(){
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		m_activation.at(REACTION(i)) = 0;
-		m_resistance.at(REACTION(i)) = 0;
-	}	
+	for (int i = 0; i < REACTION::__COUNT; ++i) {
+		m_reactions.at(REACTION(i)) = 0;
+	}
 }
-
-
 Element::REACTION Element::strToReac(std::string str){
 	std::string s = str;
 	for(int i = 0; i < s.size(); i++){
 		s[i] = std::toupper(s[i]);
 	}
-	if(s ==	"SOUFFLE"){
-		return SOUFFLE;
+	if(s == "CHALEUR"){
+		return CHALEUR;
 	}
-	if(s == "ATTRACTION"){
-		return ATTRACTION;
+	if(s == "MAGNETISME"){
+		return MAGNETISME;
 	}
-	if(s ==	"REPULSION"){
-		return REPULSION;
+	if(s == "PH"){
+		return PH;
 	}
-	if(s ==	"INFLAMMATION"){
-		return INFLAMMATION;
+	if(s == "CONDUCTIVITE"){
+		return CONDUCTIVITE;
 	}
-	if(s == "EXPLOSION"){
-		return EXPLOSION;
-	}
-	if(s ==	"GEL"){
-		return GEL;
-	}
-	if(s ==	"LIQUEFACTION"){
-		return LIQUEFACTION;
-	}
-	if(s ==	"CORROSION"){
-		return CORROSION;
-	}
-	if(s ==	"TOXICITE"){
-		return TOXICITE;
-	}
- 	if(s ==	"DECHARGE"){
-		return DECHARGE;
-	} 
-	if(s ==	"RADIOACTIVITE"){
+	if(s == "RADIOACTIVITE"){
 		return RADIOACTIVITE;
 	}
-	if(s ==	"ELEC_STATIC"){
-		return ELEC_STATIC;
-	}
-	if(s ==	"SOLIDIFICATION"){
-		return SOLIDIFICATION;
-	}
-	if(s ==	"SUBLIMATION"){
-		return SUBLIMATION;
-	}
 	return __COUNT;
-	
 }
-
-
 std::string Element::reacToStr(REACTION r){
 	switch(r){
-		case REACTION::SOUFFLE:
-			return "SOUFFLE";
-		case REACTION::SUBLIMATION:
-			return "SUBLIMATION";
-		case REACTION::INFLAMMATION:
-			return "INFLAMMATION";
-		case REACTION::ATTRACTION:
-			return "ATTRACTION";
-		case REACTION::REPULSION:
-			return "REPULSION";
-		case REACTION::EXPLOSION:
-			return "EXPLOSION";
-		case REACTION::GEL:
-			return "GEL";
-		case REACTION::LIQUEFACTION:
-			return "LIQUEFACTION";
+		case REACTION::CHALEUR:
+			return "CHALEUR";
+		case REACTION::MAGNETISME:
+			return "MAGNETISME";
+		case REACTION::CONDUCTIVITE:
+			return "CONDUCTIVITE";
+		case REACTION::PH:
+			return "PH";
 		case REACTION::RADIOACTIVITE:
 			return "RADIOACTIVITE";
-		case REACTION::DECHARGE:
-			return "DECHARGE";
-		case REACTION::CORROSION:
-			return "CORROSION";
-		case REACTION::TOXICITE:
-			return "TOXICITE";
-		case REACTION::ELEC_STATIC:
-			return "ELEC_STATIC";
-		case REACTION::SOLIDIFICATION:
-			return "SOLIDIFICATION";
 		default:
 			return "";
-			break;
-
 	}
 	return "ERR";
 }
-
-std::map<Element::REACTION, float> Element::getResistance(){
-	return m_resistance;
-}
-std::map<Element::REACTION, float> Element::getActivation(){
-	return m_activation;
-}
 std::map<Element::REACTION, float> Element::getSum(){
-	std::map<Element::REACTION, float> sum;
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		sum.emplace(REACTION(i), m_activation.at(REACTION(i))-m_resistance.at(REACTION(i)));
-	}
-	return sum;
+	return m_reactions;
 }
-
-void Element::absorb(Element elem){
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		m_activation.at(REACTION(i)) += elem.getActivation().at(REACTION(i));
-		m_resistance.at(REACTION(i)) += elem.getResistance().at(REACTION(i));
-	}
+void Element::step(REACTION r, float step){
+	m_reactions.at(r) += step;
 }
-void Element::absorb(std::shared_ptr<Element> elem){
-	for(int i = 0; i < int(REACTION::__COUNT); i++){
-		m_activation.at(REACTION(i)) += elem->getActivation().at(REACTION(i));
-		m_resistance.at(REACTION(i)) += elem->getResistance().at(REACTION(i));
-		elem->m_activation.at(REACTION(i)) =0;
-		elem->m_resistance.at(REACTION(i)) =0;
-		
-	}
-}
-
-void Element::exalt(REACTION r , float weight){
-	m_activation.at(r) *= weight;
-
-}
-
-void Element::inhib(REACTION r , float weight){
-	m_resistance.at(r) *= weight;
+void Element::step(REACTION r){
+	m_reactions.at(r) += m_reactions.at(r)>=1?1:(m_reactions.at(r)<=-1?-1:0);
 }
