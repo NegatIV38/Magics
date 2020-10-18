@@ -22,7 +22,6 @@ int main()
 	std::shared_ptr<GraphManager> gmgr = std::make_shared<GraphManager>();
 	Console cwin(window, gmgr);
 
-
 	while (window->isOpen())
 	{
 		sf::Event event;
@@ -73,8 +72,6 @@ int main()
 			cwin.draw();
 		}
 		window->display();
-		
 	}
-
 	return 0;
 }

@@ -5,9 +5,6 @@
 
 class AAllure : Attribute 
 {
-private:
-	
-
 public:
 	/*! \enum Allure
 	 *
@@ -16,7 +13,16 @@ public:
 	enum Allure { RUGGED, SLEEK, BUMPY, RIBBED };
 
 	AAllure();
+	AAllure(Allure all);
 	virtual ~AAllure();
+
+	Allure getAllure();
+	void setAllure(Allure all);
+
+private:
+	Allure m_allure;	
+
+
 };
 
 #endif /* AALLURE_H */
