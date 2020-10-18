@@ -75,7 +75,7 @@ void Console::execute(std::string cmd){
 			m_history.clear();
 		}
 		if(cState == STATE::HIDE_ALL){
-			m_gMgr->hideAll();
+			//m_gMgr->hideAll();
 		}
 		if(cState == STATE::EXIT){
 			m_parent->close();
@@ -471,10 +471,10 @@ void Console::newMaterial(std::string name, int rank){
 	}
 }
 void Console::execMShow(std::string name){
-	m_gMgr->show(name);
+	//m_gMgr->show(name);
 }
 void Console::execMHide(std::string name){
-	m_gMgr->hide(name);
+	//m_gMgr->hide(name);
 }
 void Console::execMPrint(std::string name){
 	auto result = m_matPop->get(name)->getResultReac();

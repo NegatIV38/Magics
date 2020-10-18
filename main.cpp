@@ -58,8 +58,6 @@ int main(){
 				}
 			}
 		}
-		GraphManager::dt = GraphManager::clock.getElapsedTime().asMilliseconds();
-		GraphManager::clock.restart();
 		gmgr->update();
 		cwin.update();
 		window->clear();
