@@ -1,4 +1,6 @@
 #include "MatArchNode.h"
+#include "MaterialArch.h"
+
 #include <memory>
 
 MatArchNode::MatArchNode(std::shared_ptr<Element> elem): m_element(elem){
@@ -18,7 +20,7 @@ void MatArchNode::link(Element::REACTION r, std::shared_ptr<MatArchNode> node){
 	node->linkedNodes.at(r) = shared_from_this();
 }
 void MatArchNode::unlink(Element::REACTION r){
-	linkedNodes.at(r) = nullptr;
+	linkedNodes.at(r).reset();
 }
 std::map<Element::REACTION, float> MatArchNode::getResultReac(){
 	std::map<Element::REACTION,float> ret;
@@ -37,7 +39,7 @@ float MatArchNode::getElementRawValue(Element::REACTION r){
 	return m_element->getSum().at(r);
 }
 std::shared_ptr<MatArchNode> MatArchNode::getNode(Element::REACTION r){
-	if(linkedNodes.at(r) != nullptr){
+	if(linkedNodes.at(r) != nullptr && linkedNodes.at(r).get() != nullptr && r != Element::REACTION::__COUNT){
 		return linkedNodes.at(r);
 	}
 	return nullptr;
@@ -58,3 +60,11 @@ void MatArchNode::update(){
 		}	
 	}
 }
+bool MatArchNode::orpheline(std::shared_ptr<MatArchNode> parent){
+	auto nodes = MaterialArch::getAllNodes(shared_from_this());
+	if(std::find(nodes.begin(),nodes.end(),parent) == nodes.end()){
+		return true;
+	}
+	return false;
+}
+

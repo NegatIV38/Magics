@@ -126,6 +126,10 @@ void MatArchNodeView::addLink(std::shared_ptr<MatArchNodeView> nodeV,Element::RE
 	linkedViews.push_back(nodeV);
 	linkedReac.push_back(r);
 }
+void MatArchNodeView::clearLinks(){
+	linkedViews.clear();
+	linkedReac.clear();
+}
 void MatArchNodeView::setPosition(sf::Vector2f pos, sf::Vector2f dim ){
 	m_pos = pos;
 	m_bounds = dim;

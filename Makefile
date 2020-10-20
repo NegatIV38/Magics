@@ -1,4 +1,4 @@
-CC=g++ -g
+CC=g++ -g 
 LIB=-lsfml-graphics -lsfml-window -lsfml-system
 
 all: packs main

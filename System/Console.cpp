@@ -6,12 +6,13 @@
 #include <memory>
 #include <string>
 
-std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear","show","hide","hideall","colors"	};
+std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear","show","hide","hideall","colors","pause","resume"	};
 
 //Constructors
 
 Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)	:m_parent(win), m_gMgr(gmgr){
-	m_visibility = false;
+	m_visibility =true;
+	m_pause = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
 	m_background->setFillColor(sf::Color(0,0,0,127));
 	m_background->setOutlineColor(sf::Color::White);
@@ -27,8 +28,14 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<Gr
 	m_cmdID = 0;
 	histoShift = 0;
 	pageShift = 5;
-	m_matPop = std::make_shared<MaterialPop>();
+	
+	m_matPop = std::make_shared<MaterialPop>(this);
 	m_gMgr->setMaterialPop(m_matPop);
+}
+
+void Console::initMatPop(){
+
+//	m_matPop = std::make_shared<MaterialPop>(shared_from_this());
 }
 Console::~Console(){
 }
@@ -73,6 +80,12 @@ void Console::execute(std::string cmd){
 		}
 		if(cState == STATE::CLEAR){
 			m_history.clear();
+		}
+		if(cState == STATE::PAUSE){
+			m_pause = true;
+		}
+		if(cState == STATE::RESUME){
+			m_pause = false;
 		}
 		if(cState == STATE::HIDE_ALL){
 			//m_gMgr->hideAll();
@@ -137,6 +150,12 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			}
 			else if(cWord == "colors"){
 				return STATE::COLORS;
+			}
+			else if(cWord == "pause"){
+				return STATE::PAUSE;
+			}
+			else if(cWord == "resume"){
+				return STATE::RESUME;
 			}
 			else if(cWord == "exit"){
 				return STATE::EXIT;
@@ -364,6 +383,9 @@ void Console::toggle(){
 bool Console::isVisible(){
 	return m_visibility;
 }
+bool Console::getPaused(){
+	return m_pause;
+}
 void Console::updateHistory(){
 	for(int i = m_history.size()-1; i >= std::max(0,int(m_history.size()-1-histoShift-getHistMaxSize())); i--){
 		m_history.at(i)->setPosition(2,(getHistMaxSize()+histoShift-(m_history.size()-1-i))*m_charSize);
@@ -459,9 +481,9 @@ void Console::newElement(std::string name, int rank){
 } 
 void Console::newMaterial(std::string name, int rank){
 	if(!isVariable(name)){
-		m_variables.emplace(name,TYPE::MATERIAL);
+	//	m_variables.emplace(name,TYPE::MATERIAL);
 		if(!inMaterial(name)){
-			std::shared_ptr<MaterialArch> mat = std::make_shared<MaterialArch>();
+			std::shared_ptr<MaterialArch> mat = std::make_shared<MaterialArch>(m_matPop);
 			mat->generate(rank);
 			m_matPop->add(name,mat);
 		}
@@ -745,7 +767,13 @@ void Console::pageDown(){
 	}
 	updateHistory();
 }
+void Console::togglePause(){
+	m_pause = !m_pause;
+}
+void Console::addMatName(std::string name){
 
+	m_variables.emplace(name,TYPE::MATERIAL);
+}
 //Var existence check -------------------------------------------------
 
 bool Console::inDescriptors(std::string str){

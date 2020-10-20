@@ -7,22 +7,29 @@
 #include <queue>
 #include <vector>
 
+class MaterialPop;
+
 class MaterialArch
 {
 private:
 	std::shared_ptr<MatArchNode> m_root;	
+	std::shared_ptr<MaterialPop> m_pop;
 	sf::Clock m_clock;
+	bool ticked;
 
 	static void sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum);
 	static void sumStatsSign(std::shared_ptr<MatArchNode> cnode,std::map<Element::REACTION,float>& sum, bool& positive);
 	static void setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>& ret);
 	static void stepNodes(std::shared_ptr<MatArchNode> cnode);
+	static void unlinkNodes(std::shared_ptr<MatArchNode> cnode,std::map<std::shared_ptr<MatArchNode>,std::vector<Element::REACTION>>& marks);
 
 
 	void updateStep();
 public:
-	MaterialArch();
+	MaterialArch(std::shared_ptr<MaterialPop> pop);
 	virtual ~MaterialArch();
+
+	static std::vector<std::shared_ptr<MatArchNode>> getAllNodes(std::shared_ptr<MatArchNode> root);
 
 	void update();
 
@@ -33,6 +40,8 @@ public:
 	std::map<Element::REACTION, std::vector<std::shared_ptr<MatArchNode>>> getFreeLinks();
 	void generate(int nbElem);
 	void routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNode));
+	bool getTicked();
+	void closeTicked();
 	
 	std::shared_ptr<MaterialArch> combine(std::shared_ptr<MaterialArch> other);
 	MaterialArch operator+(const MaterialArch& other);	

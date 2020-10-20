@@ -8,6 +8,8 @@
 #include <memory>
 #include <string>
 
+class Console;
+
 class MaterialPop
 {
 private:
@@ -15,8 +17,11 @@ private:
 	std::map<std::string, std::shared_ptr<MaterialArch>> m_varMaterials;
 	std::map<std::string, std::shared_ptr<MaterialArchView>> m_views;
 
+	Console* m_console;
+	static int orphCount;
 public:
-	MaterialPop();
+	//MaterialPop(std::shared_ptr<Console> console);
+	MaterialPop(Console* console);
 	virtual ~MaterialPop();
 
 	void add(std::string name, std::shared_ptr<MaterialArch> mat);
@@ -25,6 +30,8 @@ public:
 	std::shared_ptr<MaterialArch> get(std::string name);
 	std::shared_ptr<MaterialArchView> getView(std::string name);
 	bool find(std::string name);
+
+	std::string orphName();
 		
 };
 

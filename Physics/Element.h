@@ -19,7 +19,10 @@ enum REACTION{
  	RADIOACTIVITE, REPULSION,
 	SOLIDIFICATION, SOUFFLE,SUBLIMATION,TOXICITE,*/
 
-	CHALEUR,MAGNETISME, PH,CONDUCTIVITE, RADIOACTIVITE,
+
+	CHALEUR,
+	MAGNETISME, PH,
+	CONDUCTIVITE, RADIOACTIVITE,
 	__COUNT,
 };
 		Element();
@@ -43,6 +46,7 @@ enum REACTION{
 	private:
 		void initStable();
 	
+		float stepFactor;
 		//std::string m_name;
 	
 		std::map<REACTION, float> m_reactions;

@@ -12,13 +12,17 @@ void Element::initStable(){
 	for (int i = 0; i < REACTION::__COUNT; ++i) {
 		m_reactions.emplace(REACTION(i),1.f);
 	}
+	stepFactor=1;
 }
 void Element::randomize(){
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		m_reactions.at(REACTION(i)) =( -500+(rand()%1000))/100.f;
 	}	
+	//stepFactor = (-500+rand()%1000)/100.f;
+	stepFactor = rand()%1000/100.f;
 }
 void Element::initPower(int rank , bool random){
+	initStable();
 	m_reactions.clear();
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		if(random){
@@ -80,5 +84,5 @@ void Element::step(REACTION r, float step){
 	m_reactions.at(r) += step;
 }
 void Element::step(REACTION r){
-	m_reactions.at(r) += m_reactions.at(r)>=1?1:(m_reactions.at(r)<=-1?-1:0);
+	m_reactions.at(r) += stepFactor*(m_reactions.at(r)>=1?1:(m_reactions.at(r)<=-1?-1:0));
 }

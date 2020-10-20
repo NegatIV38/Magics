@@ -27,6 +27,7 @@ public:
 	
 	std::map<Element::REACTION, std::shared_ptr<MatArchNode>> getNextNodes();
 	void generate();
+	bool orpheline(std::shared_ptr<MatArchNode> parent);
 };
 
 #endif /* MATARCHNODE_H */

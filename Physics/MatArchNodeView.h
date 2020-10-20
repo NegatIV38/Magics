@@ -21,7 +21,6 @@
 class MatArchNodeView
 {
 protected:
-
 	sf::CircleShape g_shape;	
 	int m_id;
 	std::vector<sf::RectangleShape> g_inputs;		
@@ -32,26 +31,22 @@ private:
 	float m_speedX,m_speedY;
 	std::vector<std::shared_ptr<MatArchNodeView>> linkedViews;
 	std::vector<Element::REACTION> linkedReac;
-
 	sf::Vector2f m_pos,m_bounds;
-
 	std::shared_ptr<sf::VertexArray> g_lines;
-
 public:
 	static std::map<Element::REACTION,sf::Color> elemColors;
 	MatArchNodeView(std::shared_ptr<MatArchNode> node);
 	virtual ~MatArchNodeView();
 
 	void printLinks();
-
 	void setPosition(sf::Vector2f pos, sf::Vector2f dim = sf::Vector2f(600,600));
-
 	void initShape();
 	void initInputs();
 	void setID(int id);
 	void update();
 	void draw(std::shared_ptr<sf::RenderWindow> win);
 	void addLink(std::shared_ptr<MatArchNodeView> nodeV,Element::REACTION r);
+	void clearLinks();
 };
 
 #endif /* MATARCHNODEVIEW_H */

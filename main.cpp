@@ -3,6 +3,7 @@
 #include "Magics/Function.h"
 #include "System/Console.h"
 #include "Physics/Element.h"
+#include <SFML/Window/Keyboard.hpp>
 #include <ctime>
 #include <memory>
 #include "Physics/MaterialArchView.h"
@@ -17,53 +18,56 @@ int main(){
 		need.emplace(Element::REACTION(i), i);
 	}
 	std::shared_ptr<GraphManager> gmgr = std::make_shared<GraphManager>();
-	Console cwin(window, gmgr);
-	while (window->isOpen())
-	{
+	std::shared_ptr<Console> cwin = std::make_shared<Console>(window, gmgr);
+	//cwin->initMatPop();
+	while (window->isOpen()){
 		sf::Event event;
-		while (window->pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-			{
+		while (window->pollEvent(event)){
+			if (event.type == sf::Event::Closed){
 				window->close();
 			}
 			if(event.type == sf::Event::KeyPressed){
 				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Escape)){
-					cwin.toggle();
+					cwin->toggle();
 				}
 				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)){
-					if(cwin.isVisible()){
-						cwin.upArrow();
+					if(cwin->isVisible()){
+						cwin->upArrow();
 					}
 				}
 				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)){
-					if(cwin.isVisible()){
-						cwin.downArrow();
+					if(cwin->isVisible()){
+						cwin->downArrow();
 					}
 				}
 				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageDown)){
-					if(cwin.isVisible()){
-						cwin.pageDown();
+					if(cwin->isVisible()){
+						cwin->pageDown();
 					}
 				}
 				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::PageUp)){
-					if(cwin.isVisible()){
-						cwin.pageUp();
+					if(cwin->isVisible()){
+						cwin->pageUp();
 					}
+				}
+				if(sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Insert)){
+						cwin->togglePause();
 				}
 			}
 			if(event.type == sf::Event::TextEntered){
-				if(cwin.isVisible()){
-					cwin.setCurrentCmd(event.text.unicode);
+				if(cwin->isVisible()){
+					cwin->setCurrentCmd(event.text.unicode);
 				}
 			}
 		}
-		gmgr->update();
-		cwin.update();
+		if(!cwin->getPaused()){
+			gmgr->update();
+		}
+		cwin->update();
 		window->clear();
 		gmgr->draw(window);
-		if(cwin.isVisible()){
-			cwin.draw();
+		if(cwin->isVisible()){
+			cwin->draw();
 		}
 		window->display();
 	}

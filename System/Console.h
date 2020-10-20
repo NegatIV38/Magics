@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <memory>
+#include <string>
 #include "../Magics/Descripteur.h"
 #include "../Magics/Function.h"
 #include "../Physics/Element.h"
@@ -17,7 +18,7 @@ enum TYPE{
 
 enum STATE{
 	ERROR,
-	INIT,CLEAR, VAR_LIST, EXIT, COLORS,HIDE_ALL, 
+	INIT,CLEAR, VAR_LIST, EXIT, COLORS,HIDE_ALL,PAUSE,RESUME, 
 	NEW_DESC, DESC_NAME, DESC_FUN,
 	NEW_FUN, FUN_NAME,
 	VAR_D, 
@@ -39,7 +40,8 @@ enum STATE{
 
 };
 
-class Console{
+class Console: public std::enable_shared_from_this<Console>
+{
 	
 	public:
 		Console(const std::shared_ptr<sf::RenderWindow>& win, std::shared_ptr<GraphManager> gmgr);
@@ -59,7 +61,9 @@ class Console{
 		void downArrow();
 		void pageUp();
 		void pageDown();
-		
+		void togglePause();
+		bool getPaused();
+		void addMatName(std::string name);	
 	private:
 
 		std::string autoComplete(std::string line, int id);
@@ -117,9 +121,11 @@ class Console{
 		bool isMaterial(std::string str);
 		bool inMaterial(std::string str);
 		
+		void initMatPop();
 		
 		//------------------------------------
 		bool m_visibility;
+		bool m_pause;
 		std::shared_ptr<sf::RectangleShape> m_background;
 		std::shared_ptr<sf::RenderWindow> m_parent;
 		std::vector<std::string> m_cmds;
