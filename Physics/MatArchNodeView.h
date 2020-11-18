@@ -2,7 +2,7 @@
 #define MATARCHNODEVIEW_H
 
 #include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/Font.hpp>
+#include <SFML/Graphics.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Text.hpp>
@@ -30,22 +30,26 @@ private:
 	std::shared_ptr<MatArchNode> m_node;
 	float m_speedX,m_speedY;
 	std::vector<std::shared_ptr<MatArchNodeView>> linkedViews;
-	std::vector<Element::REACTION> linkedReac;
+	std::vector<REAC> linkedReac;
 	sf::Vector2f m_pos,m_bounds;
 	std::shared_ptr<sf::VertexArray> g_lines;
 public:
-	static std::map<Element::REACTION,sf::Color> elemColors;
+	static std::map<REAC,sf::Color> elemColors;
 	MatArchNodeView(std::shared_ptr<MatArchNode> node);
+	MatArchNodeView(std::shared_ptr<MatArchNode> node,sf::Vector2f pos);
 	virtual ~MatArchNodeView();
 
 	void printLinks();
 	void setPosition(sf::Vector2f pos, sf::Vector2f dim = sf::Vector2f(600,600));
+	sf::Vector2f getPosition();
 	void initShape();
 	void initInputs();
+	void initLines();
 	void setID(int id);
 	void update();
 	void draw(std::shared_ptr<sf::RenderWindow> win);
-	void addLink(std::shared_ptr<MatArchNodeView> nodeV,Element::REACTION r);
+	void addLink(std::shared_ptr<MatArchNodeView> nodeV,REAC r);
+	void removeLink();
 	void clearLinks();
 };
 

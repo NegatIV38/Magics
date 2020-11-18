@@ -1,6 +1,7 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
+#include <fstream>
 #include <SFML/Graphics.hpp>
 #include <SFML/Graphics/Color.hpp>
 #include <memory>
@@ -11,14 +12,13 @@
 #include "GraphManager.h"
 #include "../Physics/MaterialPop.h"
 
-
 enum TYPE{
 	DESCRIPTOR, FUNCTION, ELEMENT, MATERIAL
 };
-
 enum STATE{
 	ERROR,
 	INIT,CLEAR, VAR_LIST, EXIT, COLORS,HIDE_ALL,PAUSE,RESUME, 
+	LOADSC, LOADSC_FILE,SAVESC,SAVESC_FILE,
 	NEW_DESC, DESC_NAME, DESC_FUN,
 	NEW_FUN, FUN_NAME,
 	VAR_D, 
@@ -34,9 +34,9 @@ enum STATE{
 	E_ABSORB, E_ABSORB_ELEM,
 
 	NEW_MAT, MAT_NAME, MAT_RANK,
-	VAR_M, M_SHOW, M_HIDE, M_PRINT,
+	VAR_M, M_SHOW, M_HIDE, M_PRINT,M_COUNT,
 	M_PLUS, M_PLUS_ARG, M_PLUS_EQUAL, M_PLUS_NEW_MAT
-
+	
 
 };
 
@@ -64,7 +64,31 @@ class Console: public std::enable_shared_from_this<Console>
 		void togglePause();
 		bool getPaused();
 		void addMatName(std::string name);	
+		void deleteMatName(std::string name);
+
 	private:
+		bool m_visibility;
+		bool m_pause;
+		std::shared_ptr<sf::RectangleShape> m_background;
+		std::shared_ptr<sf::RenderWindow> m_parent;
+		std::vector<std::string> m_cmds;
+		std::vector<std::shared_ptr<sf::Text>> m_history;
+		std::string m_currstr;
+		sf::Text m_current;
+		sf::Font m_font;
+		int m_charSize;
+		int m_cmdID;
+		int histoShift;
+		int pageShift;
+		std::map<std::string,TYPE> m_variables;
+		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
+		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
+		std::map<std::string, std::shared_ptr<Element>> m_varElements;
+		std::map<std::string, std::shared_ptr<MaterialArch>> m_matBuffer;
+		std::shared_ptr<MaterialPop> m_matPop;
+		std::shared_ptr<GraphManager> m_gMgr;
+
+		//--------------------------------------------------------------------------
 
 		std::string autoComplete(std::string line, int id);
 		bool is_num(const std::string& str);	
@@ -89,11 +113,14 @@ class Console: public std::enable_shared_from_this<Console>
 
 		void execFPrint(std::string name);
 		void execEPrint(std::string name);
+		void execLoadSc(std::string file);
+		void execSaveSc(std::string file);
 
 		void execMShow(std::string name);
 		void execMHide(std::string name);
 		void execCombine(std::string a, std::string b, std::string c);
 		void execMPrint(std::string name);
+		void execMCount(std::string name);
 		
 		STATE getInitErr(std::string msg);
 		STATE getNewDescErr(std::string msg);
@@ -114,36 +141,10 @@ class Console: public std::enable_shared_from_this<Console>
 		bool isFunction(std::string str);
 		bool inFunctions(std::string str);
 		bool inDescriptors(std::string str);
-
 		bool isElement(std::string str);
 		bool inElements(std::string str);
-
 		bool isMaterial(std::string str);
 		bool inMaterial(std::string str);
-		
-		void initMatPop();
-		
-		//------------------------------------
-		bool m_visibility;
-		bool m_pause;
-		std::shared_ptr<sf::RectangleShape> m_background;
-		std::shared_ptr<sf::RenderWindow> m_parent;
-		std::vector<std::string> m_cmds;
-		std::vector<std::shared_ptr<sf::Text>> m_history;
-		std::string m_currstr;
-		sf::Text m_current;
-		sf::Font m_font;
-		int m_charSize;
-		int m_cmdID;
-		int histoShift;
-		int pageShift;
-		std::map<std::string,TYPE> m_variables;
-		std::map<std::string, std::shared_ptr<Descripteur>> m_varDescriptors;
-		std::map<std::string, std::shared_ptr<Function>> m_varFunctions;
-		std::map<std::string, std::shared_ptr<Element>> m_varElements;
-	//	std::map<std::string, std::shared_ptr<MaterialArch>> m_varMaterials;
-		std::shared_ptr<MaterialPop> m_matPop;
-		std::shared_ptr<GraphManager> m_gMgr;
 }; 
 
 #endif

@@ -21,7 +21,7 @@ private:
 	std::shared_ptr<MaterialArch> m_arch;
 
 	std::map<std::shared_ptr<MatArchNode>,std::shared_ptr<MatArchNodeView>> m_nodes;
-
+	std::vector<std::shared_ptr<MatArchNode>> delNodes;
 	//std::vector<std::shared_ptr<MatArchNodeView>> g_nodes;
 	//std::vector<std::shared_ptr<MatArchNode>> m_nodes;
 	
@@ -38,6 +38,7 @@ private:
 
 public:
 
+	//static void nodeReport(std::shared_ptr<MatArchNode> cnode, std::map<std::shared_ptr<MatArchNode>,std::shared_ptr<MatArchNodeView>>& ret);
 
 	MaterialArchView(std::shared_ptr<MaterialArch> arch);
 	virtual ~MaterialArchView();
@@ -52,6 +53,9 @@ public:
 	void draw(std::shared_ptr<sf::RenderWindow> win);
 
 	void printLinks();
+	void clean();
+
+	std::map<std::shared_ptr<MatArchNode>,std::shared_ptr<MatArchNodeView>> getNodes();
 };
 
 #endif /* MATERIALARCHVIEW_H */

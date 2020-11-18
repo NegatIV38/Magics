@@ -1,7 +1,7 @@
 #include "Element.h"
 
 Element::Element(){
-	initStable();	
+	initStable();
 }
 Element::Element(int rank){
 	initPower(rank);
@@ -13,13 +13,15 @@ void Element::initStable(){
 		m_reactions.emplace(REACTION(i),1.f);
 	}
 	stepFactor=1;
+	reduceStep = false;
 }
 void Element::randomize(){
 	for(int i = 0; i < int(REACTION::__COUNT); i++){
 		m_reactions.at(REACTION(i)) =( -500+(rand()%1000))/100.f;
-	}	
+	}
 	//stepFactor = (-500+rand()%1000)/100.f;
-	stepFactor = rand()%1000/100.f;
+	stepFactor = rand()%9000/100.f;
+	reduceStep = false;
 }
 void Element::initPower(int rank , bool random){
 	initStable();
@@ -32,13 +34,13 @@ void Element::initPower(int rank , bool random){
 			m_reactions.emplace(REACTION(i) , rank);
 		}
 	}
-} 
+}
 void Element::null(){
 	for (int i = 0; i < REACTION::__COUNT; ++i) {
 		m_reactions.at(REACTION(i)) = 0;
 	}
 }
-Element::REACTION Element::strToReac(std::string str){
+REAC Element::strToReac(std::string str){
 	std::string s = str;
 	for(int i = 0; i < s.size(); i++){
 		s[i] = std::toupper(s[i]);
@@ -77,7 +79,7 @@ std::string Element::reacToStr(REACTION r){
 	}
 	return "ERR";
 }
-std::map<Element::REACTION, float> Element::getSum(){
+std::map<REAC, float> Element::getSum(){
 	return m_reactions;
 }
 void Element::step(REACTION r, float step){
@@ -85,4 +87,28 @@ void Element::step(REACTION r, float step){
 }
 void Element::step(REACTION r){
 	m_reactions.at(r) += stepFactor*(m_reactions.at(r)>=1?1:(m_reactions.at(r)<=-1?-1:0));
+	/*if(m_reactions.at(r) > 1){
+		m_reactions.at(r) = std::min(m_reactions.at(r),100.f);
+	}
+	else if(m_reactions.at(r) < -1){
+		m_reactions.at(r) = std::max(m_reactions.at(r),-100.f);
+
+	}*/
+
+	if(std::abs(int(m_reactions.at(r)))%100 >= 75 && reduceStep){
+		stepFactor /= 10;
+		reduceStep = false;
+	}
+	else if(std::abs(int(m_reactions.at(r)))%100 <= 25 && !reduceStep){
+		reduceStep = true;
+	}
+}
+
+float Element::invstep(REACTION r){
+
+	float amount = stepFactor*(m_reactions.at(r)>=1?1:(m_reactions.at(r)<=-1?-1:0));
+
+	m_reactions.at(r) -= amount;
+	return amount;
+
 }

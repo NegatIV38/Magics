@@ -1,18 +1,18 @@
-#include "MaterialArch.h"	
+#include "MaterialArch.h"
 #include <algorithm>
 #include <deque>
 #include <memory>
 #include <vector>
 #include "MaterialPop.h"
 
-MaterialArch::MaterialArch(std::shared_ptr<MaterialPop> pop):m_pop(pop){
+MaterialArch::MaterialArch(MaterialPop* pop){
+	m_pop.reset(pop);
 	ticked = false;
 }
 MaterialArch::~MaterialArch(){
 }
 void MaterialArch::setRoot(std::shared_ptr<MatArchNode> r){
-	//if r is linked to root ->
-	m_root = r;
+		m_root = r;
 }
 std::shared_ptr<MatArchNode> MaterialArch::getRoot(){
 	return m_root;
@@ -28,11 +28,11 @@ std::vector<std::shared_ptr<MatArchNode>> MaterialArch::getAllNodes(std::shared_
 		toVisit.pop_front();
 
 		visited.push_back(current);
-		for(int i = 0; i < Element::REACTION::__COUNT; i++){
-			if(current->getNode(Element::REACTION(i))!= nullptr){
+		for(int i = 0; i < REAC::__COUNT; i++){
+			if(current->getNode(REAC(i))!= nullptr){
 				bool hasBeenVisited = false;
 				for (int j = 0; j < visited.size() ; j++) {
-					if(current->getNode(Element::REACTION(i))== visited.at(j)){
+					if(current->getNode(REAC(i))== visited.at(j)){
 						hasBeenVisited = true;
 						break;
 					}
@@ -40,14 +40,14 @@ std::vector<std::shared_ptr<MatArchNode>> MaterialArch::getAllNodes(std::shared_
 				if(!hasBeenVisited){
 					bool isToVisit = false;
 					for (int j = 0; j < toVisit.size() ; j++) {
-						if(current->getNode(Element::REACTION(i))== toVisit.at(j)){
+						if(current->getNode(REAC(i))== toVisit.at(j)){
 							isToVisit = true;
 							break;
 						}
 					}
 					if(!isToVisit){
-						toVisit.push_back(current->getNode(Element::REACTION(i)));
-					}	
+						toVisit.push_back(current->getNode(REAC(i)));
+					}
 				}
 			}
 		}
@@ -65,11 +65,11 @@ void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNod
 		toVisit.pop_front();
 		fun(current);
 		visited.push_back(current);
-		for(int i = 0; i < Element::REACTION::__COUNT; i++){
-			if(current->getNode(Element::REACTION(i))!= nullptr){
+		for(int i = 0; i < REAC::__COUNT; i++){
+			if(current->getNode(REAC(i))!= nullptr){
 				bool hasBeenVisited = false;
 				for (int j = 0; j < visited.size() ; j++) {
-					if(current->getNode(Element::REACTION(i))== visited.at(j)){
+					if(current->getNode(REAC(i))== visited.at(j)){
 						hasBeenVisited = true;
 						break;
 					}
@@ -77,39 +77,39 @@ void MaterialArch::routeAllNodes(void(*fun)(std::shared_ptr<MatArchNode> currNod
 				if(!hasBeenVisited){
 					bool isToVisit = false;
 					for (int j = 0; j < toVisit.size() ; j++) {
-						if(current->getNode(Element::REACTION(i))== toVisit.at(j)){
+						if(current->getNode(REAC(i))== toVisit.at(j)){
 							isToVisit = true;
 							break;
 						}
 					}
 					if(!isToVisit){
-						toVisit.push_back(current->getNode(Element::REACTION(i)));
-					}	
+						toVisit.push_back(current->getNode(REAC(i)));
+					}
 				}
 			}
 		}
 	}
 }
-std::map<Element::REACTION, float> MaterialArch::getResultReac(){
-	std::map<Element::REACTION,float> ret;
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		ret.emplace(Element::REACTION(i),0.f);
+std::map<REAC, float> MaterialArch::getResultReac(){
+	std::map<REAC,float> ret;
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.emplace(REAC(i),0.f);
 	}
-	routeAllNodes<std::map<Element::REACTION,float>>(sumStatsNodes,ret);
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		ret.at(Element::REACTION(i)) /=2.f;
+	routeAllNodes<std::map<REAC,float>>(sumStatsNodes,ret);
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.at(REAC(i)) /=2.f;
 	}
 	return ret;
 }
-std::map<Element::REACTION,float> MaterialArch::getReacOfSign(bool positive){
-	std::map<Element::REACTION,float> ret;
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		ret.emplace(Element::REACTION(i),0.f);
+std::map<REAC,float> MaterialArch::getReacOfSign(bool positive){
+	std::map<REAC,float> ret;
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.emplace(REAC(i),0.f);
 	}
-	routeAllNodes<std::map<Element::REACTION,float>,bool>(sumStatsSign,ret,positive);
+	routeAllNodes<std::map<REAC,float>,bool>(sumStatsSign,ret,positive);
 
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		ret.at(Element::REACTION(i)) /=2.f;
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.at(REAC(i)) /=2.f;
 	}
 	return ret;
 }
@@ -130,68 +130,93 @@ void MaterialArch::generate(int nbElem){
 		for (auto node : nodeList) {
 			bool canLink = false;
 			auto linkList = node->getNextNodes();
-			for(int i = 0; i < Element::REACTION::__COUNT; i++){
-				if(linkList.at(Element::REACTION(i)) == nullptr){
+			for(int i = 0; i < REAC::__COUNT; i++){
+/*				bool compatible = ((node->getElementRawValue(REAC(i)) > 1 &&
+							fLinks.at(REAC(i)).at(best)->getElementRawValue(REAC(i)) < -1) ||
+						(node->getElementRawValue(REAC(i)) < -1 &&
+						 fLinks.at(REAC(i)).at(best)->getElementRawValue(REAC(i)) > 1));
+*/
+				if(linkList.at(REAC(i)) == nullptr){
 					canLink = true;
 					break;
 				}
 			}
 			if(canLink){
-				for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
-					if(linkList.at(Element::REACTION(j)) == nullptr){
+				for(std::size_t j = 0; j < REAC::__COUNT; j++){
+					if(linkList.at(REAC(j)) == nullptr){
 						std::vector<int> visited;
 						int idLinkNode;
-						float rawValue = node->getElementRawValue(Element::REACTION(j));
+						float rawValue = node->getElementRawValue(REAC(j));
 						bool sameSign;
 						do{
 							idLinkNode = rand()%nodeList.size();
-							float candidatRawVal = nodeList.at(idLinkNode)->getElementRawValue(Element::REACTION(j));
+							float candidatRawVal = nodeList.at(idLinkNode)->getElementRawValue(REAC(j));
 							sameSign = (rawValue > 0 && candidatRawVal > 0) || (rawValue < 0 && candidatRawVal < 0);
 							if(std::find(visited.begin(),visited.end(),idLinkNode) == visited.end()){
 								visited.push_back(idLinkNode);
 							}
-						}while((nodeList.at(idLinkNode) == node || nodeList.at(idLinkNode)->getNode(Element::REACTION(j))!=nullptr || sameSign)&&visited.size() < nodeList.size());
-						if(rand()%nbElem>-1 && (nodeList.at(idLinkNode) != node && nodeList.at(idLinkNode)->getNode(Element::REACTION(j))==nullptr)){
-							node->link(Element::REACTION(j),nodeList.at(idLinkNode));	
-						}	
+						}while((nodeList.at(idLinkNode) == node || nodeList.at(idLinkNode)->getNode(REAC(j))!=nullptr || sameSign)&&visited.size() < nodeList.size());
+						if(rand()%nbElem>-1 && (nodeList.at(idLinkNode) != node && nodeList.at(idLinkNode)->getNode(REAC(j))==nullptr)){
+							node->link(REAC(j),nodeList.at(idLinkNode));
+						}
 					}
 				}
-			}			
-		}
-	}
-}
-void MaterialArch::sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum){
-	auto stats = cnode->getResultReac();
-	for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
-		if(cnode->getNextNodes().at(Element::REACTION(j))!= nullptr){
-			sum.at(Element::REACTION(j)) += stats.at(Element::REACTION(j));
-		}
-	}	
-}
-void MaterialArch::sumStatsSign(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,float>& sum,bool& positive){
-	auto stats = cnode->getResultReac();
-	for(std::size_t j = 0; j < Element::REACTION::__COUNT; j++){
-		if(cnode->getNextNodes().at(Element::REACTION(j))!= nullptr){
-			if((positive && stats.at(Element::REACTION(j)) > 0)||(!positive && stats.at(Element::REACTION(j))<0)){
-				sum.at(Element::REACTION(j)) += stats.at(Element::REACTION(j));
 			}
 		}
-	}	
-}
-void MaterialArch::setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>& ret){
-	auto nxt = cnode->getNextNodes();
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		if(nxt.at(Element::REACTION(i))==nullptr){
-			ret.at(Element::REACTION(i)).push_back(cnode);
+	}
+	std::vector<std::shared_ptr<MatArchNode>> newRoots;
+	for (auto node : nodeList) {
+		bool unreachable = true;
+		if(!node->orpheline(m_root)){
+				unreachable = false;
+		}
+		for (auto root : newRoots) {
+			if(!node->orpheline(root)){
+				unreachable = false;
+			}
+		}
+		if(unreachable){
+			std::cout << "@ORPH" << std::endl;
+			std::shared_ptr<MaterialArch> orph(new MaterialArch(m_pop.get()));
+			orph->setRoot(node);
+			m_pop->add(m_pop->orphName(),orph);
+			newRoots.push_back(node);
 		}
 	}
 }
-std::map<Element::REACTION, std::vector<std::shared_ptr<MatArchNode>>> MaterialArch::getFreeLinks(){
-	std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>> ret;
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		ret.emplace(Element::REACTION(i),std::vector<std::shared_ptr<MatArchNode>>());
+void MaterialArch::sumStatsNodes(std::shared_ptr<MatArchNode> cnode, std::map<REAC,float>& sum){
+	auto stats = cnode->getResultReac();
+	for(std::size_t j = 0; j < REAC::__COUNT; j++){
+		if(cnode->getNextNodes().at(REAC(j))!= nullptr){
+			sum.at(REAC(j)) += stats.at(REAC(j));
+		}
 	}
-	routeAllNodes<std::map<Element::REACTION,std::vector<std::shared_ptr<MatArchNode>>>>(setFreeLinks,ret);
+}
+void MaterialArch::sumStatsSign(std::shared_ptr<MatArchNode> cnode, std::map<REAC,float>& sum,bool& positive){
+	auto stats = cnode->getResultReac();
+	for(std::size_t j = 0; j < REAC::__COUNT; j++){
+		if(cnode->getNextNodes().at(REAC(j))!= nullptr){
+			if((positive && stats.at(REAC(j)) > 0)||(!positive && stats.at(REAC(j))<0)){
+				sum.at(REAC(j)) += stats.at(REAC(j));
+			}
+		}
+	}
+}
+////
+void MaterialArch::setFreeLinks(std::shared_ptr<MatArchNode> cnode, std::map<REAC,std::vector<std::shared_ptr<MatArchNode>>>& ret){
+	auto nxt = cnode->getNextNodes();
+	for(int i = 0; i < REAC::__COUNT; i++){
+		if(nxt.at(REAC(i))==nullptr){
+			ret.at(REAC(i)).push_back(cnode);
+		}
+	}
+}
+std::map<REAC, std::vector<std::shared_ptr<MatArchNode>>> MaterialArch::getFreeLinks(){
+	std::map<REAC,std::vector<std::shared_ptr<MatArchNode>>> ret;
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.emplace(REAC(i),std::vector<std::shared_ptr<MatArchNode>>());
+	}
+	routeAllNodes<std::map<REAC,std::vector<std::shared_ptr<MatArchNode>>>>(setFreeLinks,ret);
 	return ret;
 }
 MaterialArch MaterialArch::operator+(const MaterialArch& other){
@@ -199,26 +224,26 @@ MaterialArch MaterialArch::operator+(const MaterialArch& other){
 	MaterialArch o = other;
 	auto retFree = ret.getFreeLinks();
 	auto oFree = o.getFreeLinks();
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		for(int j = 0; j < retFree.at(Element::REACTION(i)).size(); j++){
-			float val = retFree.at(Element::REACTION(i)).at(j)->getElementRawValue(Element::REACTION(i));
+	for(int i = 0; i < REAC::__COUNT; i++){
+		for(int j = 0; j < retFree.at(REAC(i)).size(); j++){
+			float val = retFree.at(REAC(i)).at(j)->getElementRawValue(REAC(i));
 			int best = 0;
-			float cval;	
-			for(int k = 1; k < oFree.at(Element::REACTION(i)).size(); k++){	
-				if(oFree.at(Element::REACTION(i)).at(k)->getNode(Element::REACTION(i))==nullptr){
+			float cval;
+			for(int k = 1; k < oFree.at(REAC(i)).size(); k++){
+				if(oFree.at(REAC(i)).at(k)->getNode(REAC(i))==nullptr){
 					bool sameSign;
-					float oval = 	oFree.at(Element::REACTION(i)).at(k)->getElementRawValue(Element::REACTION(i));
-					float bval = 	oFree.at(Element::REACTION(i)).at(best)->getElementRawValue(Element::REACTION(i));
+					float oval = 	oFree.at(REAC(i)).at(k)->getElementRawValue(REAC(i));
+					float bval = 	oFree.at(REAC(i)).at(best)->getElementRawValue(REAC(i));
 					sameSign = (val > 0 && oval > 0) || (val < 0 && oval < 0);
 					if(std::abs(val+oval) < std::abs(val+bval) && !sameSign){
 						best = k;
 					}
 				}
 			}
-			if(oFree.at(Element::REACTION(i)).size() > 0 && retFree.at(Element::REACTION(i)).at(j)->getNode(Element::REACTION(i)) == nullptr && oFree.at(Element::REACTION(i)).at(best)->getNode(Element::REACTION(i))==nullptr){
-				cval = oFree.at(Element::REACTION(i)).at(best)->getElementRawValue(Element::REACTION(i));
+			if(oFree.at(REAC(i)).size() > 0 && retFree.at(REAC(i)).at(j)->getNode(REAC(i)) == nullptr && oFree.at(REAC(i)).at(best)->getNode(REAC(i))==nullptr){
+				cval = oFree.at(REAC(i)).at(best)->getElementRawValue(REAC(i));
 				if( !((val > 0 && cval > 0) || (val < 0 && cval < 0))){
-					retFree.at(Element::REACTION(i)).at(j)->link(Element::REACTION(i),oFree.at(Element::REACTION(i)).at(best));
+					retFree.at(REAC(i)).at(j)->link(REAC(i),oFree.at(REAC(i)).at(best));
 				}
 			}
 		}
@@ -235,54 +260,106 @@ void MaterialArch::update(){
 		updateStep();
 	}
 }
+
 void MaterialArch::updateStep(){
 	routeAllNodes(stepNodes);
-	std::map<std::shared_ptr<MatArchNode>,std::vector<Element::REACTION>> marks;
+	std::map<std::shared_ptr<MatArchNode>,std::vector<REAC>> marks;
 	routeAllNodes(unlinkNodes,marks);
 	for (auto node : marks) {
 		auto linkList = node.second;
 		std::cout << "_UNLINK_ (" <<linkList.size() << ")"<< std::endl;
 		std::vector<std::shared_ptr<MatArchNode>> lost;
 		for(std::size_t i = 0; i < linkList.size(); i++){
-			lost.push_back(std::shared_ptr<MatArchNode>());
 			if(node.first->getNode(linkList.at(i)) != nullptr){
-				lost.back() = node.first->getNode(linkList.at(i));
+				if(std::find(lost.begin(),lost.end(),node.first->getNode(linkList.at(i)))==lost.end()){
+					lost.push_back(node.first->getNode(linkList.at(i)));
+				}
+				lost.back()->unlink(linkList.at(i));
 				node.first->unlink(linkList.at(i));
 			}
 		}
+		for(auto l:lost){
+			if(l == nullptr){
+				std::cout << "NULL__" << std::endl;
+				break;
+			}
+			if(l->orpheline(m_root) && l->orpheline(node.first)){
+				std::cout << "_ORPH_L" << std::endl;
+				std::shared_ptr<MaterialArch> orph = std::make_shared<MaterialArch>(m_pop.get());
+				orph->setRoot(l);
+				m_pop->add(m_pop->orphName(),std::move(orph));
+			}
+		}
 		if(node.first->orpheline(m_root) ){
-			std::shared_ptr<MaterialArch> orph = std::make_shared<MaterialArch>(m_pop);
+			std::cout << "_ORPH_N" << std::endl;
+			std::shared_ptr<MaterialArch> orph = std::make_shared<MaterialArch>(m_pop.get());
 			orph->setRoot(node.first);
-			m_pop->add(m_pop->orphName(),orph);	
+			m_pop->add(m_pop->orphName(),std::move(orph));
 		}
 	}
 	ticked = true;
-} 
+}
 void MaterialArch::stepNodes(std::shared_ptr<MatArchNode> cnode){
 	cnode->update();
 }
-void MaterialArch::unlinkNodes(std::shared_ptr<MatArchNode> cnode,std::map<std::shared_ptr<MatArchNode>,std::vector<Element::REACTION>>& marks){
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		if(std::abs(cnode->getResultReac().at(Element::REACTION(i)))<1&& cnode->getNode(Element::REACTION(i))!=nullptr){
-			auto onode = cnode->getNode(Element::REACTION(i));
+void MaterialArch::unlinkNodes(std::shared_ptr<MatArchNode> cnode,std::map<std::shared_ptr<MatArchNode>,std::vector<REAC>>& marks){
+	for(int i = 0; i < REAC::__COUNT; i++){
+		if(std::abs(cnode->getResultReac().at(REAC(i)))<1&& cnode->getNode(REAC(i))!=nullptr){
+			auto onode = cnode->getNode(REAC(i));
 			if(marks.find(cnode) != marks.end()){
-				marks.at(cnode).push_back(Element::REACTION(i));
-			}else{
-				marks.emplace(cnode,std::vector<Element::REACTION>(1,Element::REACTION(i)));
-			}	
-			if(marks.find(onode) != marks.end()){
-				if(std::find(marks.at(onode).begin(),marks.at(onode).end(),Element::REACTION(i)) == marks.at(onode).end()){
-					marks.at(onode).push_back(Element::REACTION(i));
+				if(std::find(marks.at(cnode).begin(), marks.at(cnode).end(),REAC(i)) == marks.at(cnode).end()){
+					marks.at(cnode).push_back(REAC(i));
 				}
-			}else{
-				marks.emplace(onode,std::vector<Element::REACTION>(1,Element::REACTION(i)));
-			}	
+			}
+			else{
+				marks.emplace(cnode,std::vector<REAC>(1,REAC(i)));
+			}
+			if(marks.find(onode) != marks.end()){
+				if(std::find(marks.at(onode).begin(),marks.at(onode).end(),REAC(i)) == marks.at(onode).end()){
+					marks.at(onode).push_back(REAC(i));
+				}
+			}
+			else{
+				marks.emplace(onode,std::vector<REAC>(1,REAC(i)));
+			}
 		}
 	}
 }
+
 bool MaterialArch::getTicked(){
 	return ticked;
 }
 void MaterialArch::closeTicked(){
 	ticked = false;
 }
+float MaterialArch::getLinkValue(REAC r){
+	return getResultReac().at(r);
+}
+std::map<REAC, std::vector<std::shared_ptr<MatArchNode>>> MaterialArch::getLinkedNodes(){
+	std::map<REAC, std::vector<std::shared_ptr<MatArchNode>>> ret;
+	for(int i = 0; i < REAC::__COUNT; i++){
+		ret.emplace(REAC(i),std::vector<std::shared_ptr<MatArchNode>>());
+	}
+	routeAllNodes(getLinks,ret);
+	return ret;
+}
+void MaterialArch::getLinks(std::shared_ptr<MatArchNode> cnode,std::map<REAC,std::vector<std::shared_ptr<MatArchNode>>>& marks){
+	if(cnode != nullptr){
+		auto links = cnode->getNextNodes();
+		for (auto link : links) {
+			if(link.second != nullptr){
+				marks.at(link.first).push_back(link.second);
+			}
+		}
+	}
+}
+
+void MaterialArch::counter(std::shared_ptr<MatArchNode> cnode,int& count){
+	count++;
+}
+int MaterialArch::getCount(){
+	int ret = 0;
+	routeAllNodes(counter,ret);
+	return ret;
+}
+

@@ -2,19 +2,26 @@
 #include <SFML/Graphics/Color.hpp>
 #include <cmath>
 #include <exception>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <string>
 
-std::vector<std::string> Console::m_dictionary = {"D","Desc","Descriptor","F","Func","Function","print","addChild","getChild","removeChild", "rename","var","exit","clear","show","hide","hideall","colors","pause","resume"	};
+std::vector<std::string> Console::m_dictionary = {
+	"D","Desc","Descriptor","F","Func","Function","print","addChild",
+	"getChild","removeChild", "rename","var","exit","clear","show","hide",
+	"hideall","colors","pause","resume","count","loadsc","savesc"
+};
 
-//Constructors
+//Constructors -----------------------------------------------------------------
 
-Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)	:m_parent(win), m_gMgr(gmgr){
+Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<GraphManager> gmgr)
+	:m_parent(win), m_gMgr(gmgr)
+{
 	m_visibility =true;
 	m_pause = false;
 	m_background = std::make_shared<sf::RectangleShape>(sf::Vector2f(win->getSize().x,2+win->getSize().y/2));
-	m_background->setFillColor(sf::Color(0,0,0,127));
+	m_background->setFillColor(rgb(0,0,0,127));
 	m_background->setOutlineColor(sf::Color::White);
 	m_background->setOutlineThickness(5);
 	m_font.loadFromFile("Minecraftia-Regular.ttf");
@@ -24,23 +31,18 @@ Console::Console(const std::shared_ptr<sf::RenderWindow>& win,std::shared_ptr<Gr
 	m_current.setFont(m_font);
 	m_current.setFillColor(sf::Color::White);
 	m_current.setCharacterSize(m_charSize);
-	m_current.setPosition(0,(getHistMaxSize()+1)*m_charSize);	
+	m_current.setPosition(0,(getHistMaxSize()+1)*m_charSize);
 	m_cmdID = 0;
 	histoShift = 0;
 	pageShift = 5;
-	
+
 	m_matPop = std::make_shared<MaterialPop>(this);
 	m_gMgr->setMaterialPop(m_matPop);
-}
-
-void Console::initMatPop(){
-
-//	m_matPop = std::make_shared<MaterialPop>(shared_from_this());
 }
 Console::~Console(){
 }
 
-//Automata ---------------------------------------------------------
+//Automata ---------------------------------------------------------------------
 
 void Console::execute(std::string cmd){
 	STATE cState = STATE::INIT;
@@ -87,14 +89,21 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::RESUME){
 			m_pause = false;
 		}
+		if(cState == STATE::LOADSC_FILE){
+			execLoadSc(words.at(idWord));
+		}
+		if(cState == STATE::SAVESC_FILE){
+			execSaveSc(words.at(idWord));
+		}
 		if(cState == STATE::HIDE_ALL){
 			//m_gMgr->hideAll();
+			m_matPop->hideall();
 		}
 		if(cState == STATE::EXIT){
 			m_parent->close();
 		}
 		if(cState == STATE::COLORS){
-			printColors();			
+			printColors();
 		}
 		if(cState == STATE::ELEM_NAME){
 			if( idWord +1 == words.size() || !is_num(words.at(idWord+1))){
@@ -108,33 +117,37 @@ void Console::execute(std::string cmd){
 		if(cState == STATE::E_PRINT){
 			execEPrint(words.at(idWord-1));
 			//m_varElements.at(words.at(idWord-1))->print();
-		}	
+		}
 		if(cState == STATE::E_RAND){
 			m_varElements.at(words.at(idWord-1))->randomize();
 		}
 		if(cState == STATE::E_EXALT_WEIGHT){
-			//m_varElements.at(words.at(idWord-3))->exalt(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+			//m_varElements.at(words.at(idWord-3))->exalt(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));
 		}
 		if(cState == STATE::E_INHIB_WEIGHT){
-			//m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));	
+			//m_varElements.at(words.at(idWord-3))->inhib(Element::strToReac(words.at(idWord-1)),std::stof(words.at(idWord)));
 		}
 		if(cState == STATE::MAT_RANK){
 			newMaterial(words.at(idWord-1),std::stoi(words.at(idWord)));
+			auto roots = m_matPop->getAllRoots();
 		}
 		if(cState == STATE::M_SHOW){
 			execMShow(words.at(idWord-1));
 		}
 		if(cState == STATE::M_HIDE){
-			execMHide(words.at(idWord-1));	
+			execMHide(words.at(idWord-1));
 		}
 		if(cState == STATE::M_PRINT){
 			execMPrint(words.at(idWord-1));
+		}
+		if(cState == STATE::M_COUNT){
+			execMCount(words.at(idWord-1));
 		}
 		if(cState == STATE::M_PLUS_NEW_MAT){
 			execCombine(words.at(idWord-4),words.at(idWord-2),words.at(idWord));
 		}
 		idWord++;
-	} 
+	}
 	std::cout << stateToStr(cState) << std::endl << std::endl;
 }
 STATE Console::nextState(STATE cState,std::string cWord){
@@ -146,7 +159,7 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return STATE::CLEAR;
 			}
 			else if(cWord == "var"){
-				return STATE::VAR_LIST;	
+				return STATE::VAR_LIST;
 			}
 			else if(cWord == "colors"){
 				return STATE::COLORS;
@@ -175,6 +188,12 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			else if(cWord == "Mat" || cWord == "M" || cWord == "Material"){
 				return STATE::NEW_MAT;
 			}
+			else if(cWord ==  "loadsc"){
+				return STATE::LOADSC;
+			}
+			else if(cWord ==  "savesc"){
+				return STATE::SAVESC;
+			}
 			else if(inDescriptors(cWord)){
 				return STATE::VAR_D;
 			}
@@ -191,6 +210,16 @@ STATE Console::nextState(STATE cState,std::string cWord){
 				return getInitErr(cWord);
 			}
 			break;
+		case STATE::LOADSC:
+			if(cWord.size() == 0){
+				return STATE::ERROR;
+			}
+			return STATE::LOADSC_FILE;
+		case STATE::SAVESC:
+			if(cWord.size() == 0){
+				return STATE::ERROR;
+			}
+			return STATE::SAVESC_FILE;
 		case STATE::NEW_DESC:
 			if(inDescriptors(cWord) || inFunctions(cWord)){
 				return getNewDescErr(cWord);
@@ -199,7 +228,7 @@ STATE Console::nextState(STATE cState,std::string cWord){
 		case STATE::DESC_NAME:
 			if(inDescriptors(cWord)){
 				return getDescNameErr(cWord);
-			}	
+			}
 			return STATE::DESC_FUN;
 		case STATE::DESC_FUN:
 			if(cWord != "&"){
@@ -238,7 +267,7 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			else if(!inDescriptors(cWord)){
 				return getAddChildErr(cWord);
 			}
-			return STATE::D_ADDCHILD_ARG; 
+			return STATE::D_ADDCHILD_ARG;
 		case STATE::D_ADDCHILD_NEWD:
 			if(isVariable(cWord)){
 				return getAddChildNewDErr(cWord);
@@ -301,12 +330,12 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			}
 			break;
 		case STATE::E_EXALT:
-			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
+			if(Element::strToReac(cWord) == REAC::__COUNT){
 				return STATE::ERROR;
 			}
 			return STATE::E_EXALT_REAC;
 		case STATE::E_INHIB:
-			if(Element::strToReac(cWord) == Element::REACTION::__COUNT){
+			if(Element::strToReac(cWord) == REAC::__COUNT){
 				return STATE::ERROR;
 			}
 			return STATE::E_INHIB_REAC;
@@ -342,6 +371,9 @@ STATE Console::nextState(STATE cState,std::string cWord){
 			if(cWord == "print"){
 				return STATE::M_PRINT;
 			}
+			if(cWord == "count"){
+				return STATE::M_COUNT;
+			}
 			break;
 		case STATE::M_PLUS:
 			if(!inMaterial(cWord)){
@@ -358,7 +390,7 @@ STATE Console::nextState(STATE cState,std::string cWord){
 	}
 }
 
-//Graphical -----------------------------------------------------------
+//Graphical --------------------------------------------------------------------
 
 void Console::update(){
 }
@@ -378,7 +410,7 @@ void Console::print(std::string txt,sf::Color c){
 	updateHistory();
 }
 void Console::toggle(){
-	m_visibility = !m_visibility;	
+	m_visibility = !m_visibility;
 }
 bool Console::isVisible(){
 	return m_visibility;
@@ -395,24 +427,24 @@ int Console::getHistMaxSize(){
 	return  (int(m_background->getSize().y/m_charSize)-1);
 }
 
-//CMD execution ---------------------------------------------------
+//CMD execution ----------------------------------------------------------------
 
 void Console::printVar(){
 	for(std::map<std::string,TYPE>::iterator it = m_variables.begin(); it != m_variables.end(); it++){
 		std::string txt = "";
 		txt += it->first;
 		txt += "\t";
-		txt += typeToStr(it->second); 
+		txt += typeToStr(it->second);
 		print(txt);
 	}
 }
 void Console::printColors(){
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		print(Element::reacToStr(Element::REACTION(i)),MatArchNodeView::elemColors.at(Element::REACTION(i)));
+	for(int i = 0; i < REAC::__COUNT; i++){
+		print(Element::reacToStr(REAC(i)),MatArchNodeView::elemColors.at(REAC(i)));
 	}
 }
 void Console::execDPrint(std::string name){
-	std::vector<std::string> tree = m_varDescriptors.at(name)->getState();	
+	std::vector<std::string> tree = m_varDescriptors.at(name)->getState();
 	for(auto& line:tree){
 		print(line);
 	}
@@ -438,7 +470,33 @@ void Console::execDSetFunc(std::string desc, std::string fun){
 	else{
 		std::cout << "Invalid parameters" << std::endl;
 	}
-} 
+}
+void Console::execLoadSc(std::string file){
+	std::ifstream scf(file);
+	std::string cmd;
+	if(scf.is_open()){
+		while(std::getline(scf,cmd)){
+			newCmd(cmd);
+		}
+		scf.close();
+	}
+	else{
+		print("No such script : " + file,sf::Color::Red);
+	}
+}
+void Console::execSaveSc(std::string file){
+	std::ofstream scf(file,std::ios::out |std::ios::trunc);
+	if(scf.is_open()){
+		for (auto cmd : m_cmds) {
+			if(cmd != m_cmds.back()){
+				scf << cmd << "\n";
+			}
+		}
+	}
+	else{
+		print("Unable to write script : " + file,sf::Color::Red);
+	}
+}
 void Console::newDescriptor(std::string name, std::string fun){
 	if(!isVariable(name) && !isDescriptor(fun)){
 		m_variables.emplace(name , TYPE::DESCRIPTOR);
@@ -478,14 +536,18 @@ void Console::newElement(std::string name, int rank){
 	else{
 		print("Error : Element name already used");
 	}
-} 
+}
 void Console::newMaterial(std::string name, int rank){
 	if(!isVariable(name)){
 	//	m_variables.emplace(name,TYPE::MATERIAL);
 		if(!inMaterial(name)){
-			std::shared_ptr<MaterialArch> mat = std::make_shared<MaterialArch>(m_matPop);
+			//m_matBuffer.emplace(name,std::make_shared<MaterialArch>(m_matPop.get()));
+			//m_matBuffer.at(name)->generate(rank);
+			//m_matPop->add(name,m_matBuffer.at(name));
+			std::shared_ptr<MaterialArch> mat = std::make_shared<MaterialArch>(m_matPop.get());
 			mat->generate(rank);
 			m_matPop->add(name,mat);
+			auto roots = m_matPop->getAllRoots();
 		}
 	}
 	else{
@@ -494,17 +556,20 @@ void Console::newMaterial(std::string name, int rank){
 }
 void Console::execMShow(std::string name){
 	//m_gMgr->show(name);
+	m_matPop->show(name);
 }
 void Console::execMHide(std::string name){
 	//m_gMgr->hide(name);
+	m_matPop->hide(name);
 }
 void Console::execMPrint(std::string name){
 	auto result = m_matPop->get(name)->getResultReac();
 	auto positives = m_matPop->get(name)->getReacOfSign(true);
 	auto negatives = m_matPop->get(name)->getReacOfSign(false);
-	for(int i = 0; i < Element::REACTION::__COUNT; i++){
-		print(std::to_string(int(std::nearbyint(negatives.at(Element::REACTION(i)))))+" + "+std::to_string(int(std::nearbyint(positives.at(Element::REACTION(i)))))+" = "+std::to_string(
-					int(std::nearbyint(result.at(Element::REACTION(i))))),MatArchNodeView::elemColors.at(Element::REACTION(i)));
+	for(int i = 0; i < REAC::__COUNT; i++){
+		print(std::to_string(int(std::nearbyint(negatives.at(REAC(i)))))+" + "+
+				std::to_string(int(std::nearbyint(positives.at(REAC(i)))))+" = "+
+				std::to_string(int(std::nearbyint(result.at(REAC(i))))),MatArchNodeView::elemColors.at(REAC(i)));
 	}
 }
 void Console::execCombine(std::string a, std::string b, std::string c){
@@ -518,8 +583,12 @@ void Console::execCombine(std::string a, std::string b, std::string c){
 		print("Error : Material name already used");
 	}
 }
+void Console::execMCount(std::string name){
+	auto counts = m_matPop->getCount(name);
+	print("M : " +std::to_string(counts.first)+"  V : "+std::to_string(counts.second));
+}
 
-//Enums to Strings ----------------------------------------------------
+//Enums to Strings -------------------------------------------------------------
 
 std::string Console::typeToStr(TYPE t){
 	switch(t){
@@ -557,7 +626,7 @@ std::string Console::stateToStr(STATE s){
 		case STATE::NEW_FUN:
 			return "NEW_FUN";
 		case STATE::FUN_NAME:
-			return "FUN_NAME";		
+			return "FUN_NAME";
 		case STATE::VAR_D:
 			return "VAR_D";
 		case STATE::D_ADDCHILD:
@@ -636,16 +705,16 @@ std::string Console::stateToStr(STATE s){
 	}
 }
 
-//Basics ---------------------------------------------------------
+//Basics -----------------------------------------------------------------------
 
 void Console::newCmd(std::string cmd){
 	m_cmds.push_back(cmd);
-	print(m_cmds.back());	
+	print(m_cmds.back());
 	m_cmdID = m_cmds.size();
 	execute(cmd);//
 }
 bool Console::is_num(const std::string& str){
-    return !str.empty() && std::find_if(str.begin(), 
+    return !str.empty() && std::find_if(str.begin(),
         str.end(), [](unsigned char c) { return !(std::isdigit(c) || c == '.' || c == ','); }) == str.end();
 }
 std::vector<std::string> Console::cmdCut(std::string cmd,std::vector<char> delimits){
@@ -663,7 +732,7 @@ std::vector<std::string> Console::cmdCut(std::string cmd,std::vector<char> delim
 			temp = "";
 		}else{
 			temp += cmd.at(i);
-		}	
+		}
 	}
 	if(temp != ""){
 		ret.push_back(temp);
@@ -671,12 +740,12 @@ std::vector<std::string> Console::cmdCut(std::string cmd,std::vector<char> delim
 	return ret;
 }
 
-//CMD utilities ----------------------------------------------------------------------
+//CMD utilities ----------------------------------------------------------------
 
 void Console::setCurrentCmd(char c){
 	static int id = 0;
 	static std::string fracStr = "";
-	if(c != 9){	
+	if(c != 9){
 		fracStr = "";
 	}
 	if(c != 127 && c != 8 && c != 13 && c != 9 && c != 24 && c != 25 && c != 27){
@@ -693,7 +762,7 @@ void Console::setCurrentCmd(char c){
 			fracStr = m_currstr.substr(1,m_currstr.size());
 		}
 		m_currstr = autoComplete(fracStr,id);
-		id++;	
+		id++;
 		}
 	}
 	else if(c == 24){
@@ -707,7 +776,7 @@ void Console::setCurrentCmd(char c){
 }
 std::string Console::autoComplete(std::string line,int id){
 	std::vector<std::string> words = cmdCut(line,std::vector<char>({' ','(',')',',','.','\0'}));
-	std::string word = words.back(); 
+	std::string word = words.back();
 	std::vector<std::string> candidats;
 	for(std::map<std::string,TYPE>::iterator it = m_variables.begin(); it != m_variables.end(); it++){
 		std::size_t findid = it->first.find(word);
@@ -723,9 +792,9 @@ std::string Console::autoComplete(std::string line,int id){
 	}
 	std::string ret = ">";
 	for(int i = 0; i < words.size()-1; i++){
-		ret += words.at(i);	
+		ret += words.at(i);
 		ret += " ";
-	}	
+	}
 	if(candidats.size() > 0){
 		ret += candidats.at(id%candidats.size());
 	}else{
@@ -774,7 +843,12 @@ void Console::addMatName(std::string name){
 
 	m_variables.emplace(name,TYPE::MATERIAL);
 }
-//Var existence check -------------------------------------------------
+void Console::deleteMatName(std::string name){
+	std::cout << "DELETED : " <<name << std::endl;
+	m_variables.erase(name);
+}
+
+//Var existence check ----------------------------------------------------------
 
 bool Console::inDescriptors(std::string str){
 	if(m_varDescriptors.find(str) != m_varDescriptors.end()){
@@ -838,12 +912,16 @@ bool Console::isMaterial(std::string str){
 }
 bool Console::inMaterial(std::string str){
 	if(m_matPop->find(str)){
-		return true;	
+		return true;
+	}
+	if(m_variables.find(str) != m_variables.end()){
+		std::cout << "A MAT TO DELETE" << std::endl;
+
 	}
 	return false;
 }
 
-//Automata detailed errors -----------------------------------------
+//Automata detailed errors -----------------------------------------------------
 
 STATE Console::getInitErr(std::string msg){
 	std::cout  << "ERROR : Unknown command : "<< msg << std::endl;

@@ -9,7 +9,7 @@ class MatArchNode : public std::enable_shared_from_this<MatArchNode>
 {
 private:
 	std::shared_ptr<Element> m_element;
-	std::map<Element::REACTION, std::shared_ptr<MatArchNode>> linkedNodes;
+	std::map<REAC, std::shared_ptr<MatArchNode>> linkedNodes;
 
 
 public:
@@ -19,15 +19,18 @@ public:
 	
 	void update();
 
-	void link(Element::REACTION r, std::shared_ptr<MatArchNode> node);
-	void unlink(Element::REACTION r);
-	std::map<Element::REACTION, float> getResultReac();
-	float getElementRawValue(Element::REACTION r);
-	std::shared_ptr<MatArchNode> getNode(Element::REACTION r);
+	void link(REAC r, std::shared_ptr<MatArchNode> node);
+	void unlink(REAC r);
+	std::map<REAC, float> getResultReac();
+	float getElementRawValue(REAC r);
+	std::shared_ptr<MatArchNode> getNode(REAC r);
+
+	float getLinkValue(REAC r);
 	
-	std::map<Element::REACTION, std::shared_ptr<MatArchNode>> getNextNodes();
+	std::map<REAC, std::shared_ptr<MatArchNode>> getNextNodes();
 	void generate();
 	bool orpheline(std::shared_ptr<MatArchNode> parent);
+	bool orpheline();
 };
 
 #endif /* MATARCHNODE_H */

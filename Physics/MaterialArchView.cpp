@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include "MaterialArch.h"
+#include "MaterialPop.h"
 
 int NodeCounter::c = 0;
 
@@ -22,18 +23,22 @@ void MaterialArchView::nodeBuild(std::shared_ptr<MatArchNode> cnode, std::map<st
 	}
 	nodeList.push_back(cnode);
 	if(nodes.find(cnode) == nodes.end()){
-		nodes.emplace(cnode,std::make_shared<MatArchNodeView>(cnode));
+	/*	if(MaterialPop::deletedNodes.find(cnode) != MaterialPop::deletedNodes.end()){
+			std::cout << "_RECUP_" << std::endl;
+			nodes.emplace(cnode,MaterialPop::deletedNodes.at(cnode));
+		}else{*/
+
+			nodes.emplace(cnode,std::make_shared<MatArchNodeView>(cnode));
+	//	}
 	}
-	else{
-		
-	}
+
 }
 void MaterialArchView::linkBuild(std::shared_ptr<MatArchNode> cnode,  std::map<std::shared_ptr<MatArchNode>,std::shared_ptr<MatArchNodeView>>& nodes){
 	auto nxtNodes = cnode->getNextNodes();
-	for(int i =0; i < Element::REACTION::__COUNT; i++){
+	for(int i =0; i < REAC::__COUNT; i++){
 		for (auto node : nodes) {
-			if(node.first == nxtNodes.at(Element::REACTION(i)) && node.first != cnode){
-				nodes.find(cnode)->second->addLink(node.second,Element::REACTION(i));
+			if(node.first == nxtNodes.at(REAC(i)) && node.first != cnode){
+				nodes.find(cnode)->second->addLink(node.second,REAC(i));
 			}
 		}
 	}
@@ -44,13 +49,14 @@ void MaterialArchView::draw(std::shared_ptr<sf::RenderWindow> win){
 	}
 }
 void MaterialArchView::update(){
-	if(m_arch->getTicked()){
-		for (auto node : m_nodes) {
-			node.second->clearLinks();
-		}
-		initNodes();
-		m_arch->closeTicked();
+	//if(m_arch->getTicked()){
+	for (auto node : m_nodes) {
+		node.second->clearLinks();
 	}
+	initNodes();
+	m_arch->closeTicked();
+	//}
+	//clean();
 	for (auto node : m_nodes) {
 		node.second->update();
 	}
@@ -58,26 +64,39 @@ void MaterialArchView::update(){
 }
 void print(std::shared_ptr<MatArchNode> cnode){
 	static int c = 0;
-	std::cout << c<<" node\t " << cnode <<"\n" ; 
+	std::cout << c<<" node\t " << cnode <<"\n" ;
 	c++;
 }
 void MaterialArchView::initNodes(){
 	std::vector<std::shared_ptr<MatArchNode>> nodesList;
 	std::vector<std::shared_ptr<MatArchNode>> toErase;
+	auto prevNodes = m_nodes;
 	m_arch->routeAllNodes(nodeBuild,m_nodes,nodesList);
 	for (auto node : m_nodes) {
-		if(node.second == nullptr){
-			std::cout << "NULL" << std::endl;
-		}
+		//if(prevNodes.find(node.first) != prevNodes.end()){
+
+		//}
+		//if(node.second == nullptr){
+		//std::cout << "NULL" << std::endl;
+		//}
+
 		if(std::find(nodesList.begin(),nodesList.end(),node.first) == nodesList.end()){
-			toErase.push_back(node.first);
-			std::cout << "ERASING" << std::endl;
+			//	toErase.push_back(node.first);
+			delNodes.push_back(node.first);
+			//	std::cout << "ERASING" << std::endl;
 		}
+
 	}
-	for(std::size_t i = 0; i < toErase.size(); i++){
-		m_nodes.erase(toErase.at(i));
-	}
+
+
 	m_arch->routeAllNodes(linkBuild,m_nodes);
+}
+void MaterialArchView::clean(){
+	for(std::size_t i = 0; i < delNodes.size(); i++){
+
+		m_nodes.erase(delNodes.at(i));
+	}
+
 }
 void MaterialArchView::printLinks(){
 	for (auto node : m_nodes) {
@@ -87,7 +106,7 @@ void MaterialArchView::printLinks(){
 void MaterialArchView::setPosition(sf::Vector2f pos, sf::Vector2f dim){
 	for (auto node : m_nodes) {
 		node.second->setPosition(pos,dim);
-	}	
+	}
 }
 void MaterialArchView::startUpdateTh(){
 	threadStatus = true;
@@ -98,4 +117,7 @@ void MaterialArchView::waitUpdateTh(){
 	//if(!threadStatus){
 	m_updateTh.wait();
 	//}
+}
+std::map<std::shared_ptr<MatArchNode>,std::shared_ptr<MatArchNodeView>> MaterialArchView::getNodes(){
+	return m_nodes;
 }

@@ -11,15 +11,10 @@
 
 int main(){
 	srand(time(nullptr));
-	std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(sf::VideoMode(1800, 600), "SFML works!");
-	Descripteur d("test",std::make_shared<Function>("objet"));
-	std::map<Element::REACTION, float> need;
-	for(int i = 0; i < int(Element::REACTION::__COUNT); i++){
-		need.emplace(Element::REACTION(i), i);
-	}
+	std::string title = "Magics";
+	std::shared_ptr<sf::RenderWindow> window = std::make_shared<sf::RenderWindow>(sf::VideoMode(1800, 600), title);
 	std::shared_ptr<GraphManager> gmgr = std::make_shared<GraphManager>();
 	std::shared_ptr<Console> cwin = std::make_shared<Console>(window, gmgr);
-	//cwin->initMatPop();
 	while (window->isOpen()){
 		sf::Event event;
 		while (window->pollEvent(event)){
@@ -60,10 +55,10 @@ int main(){
 				}
 			}
 		}
+		cwin->update();
 		if(!cwin->getPaused()){
 			gmgr->update();
 		}
-		cwin->update();
 		window->clear();
 		gmgr->draw(window);
 		if(cwin->isVisible()){

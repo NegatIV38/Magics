@@ -19,5 +19,5 @@ void GraphManager::draw(std::shared_ptr<sf::RenderWindow> win){
 	m_matPop->draw(win);
 }
 void GraphManager::setMaterialPop(std::shared_ptr<MaterialPop> pop){
-	m_matPop = pop;
+	m_matPop.reset(pop.get());
 }

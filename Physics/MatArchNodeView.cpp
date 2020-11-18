@@ -11,13 +11,15 @@
 #include <memory>
 #include <string>
 
-std::map<Element::REACTION,sf::Color> MatArchNodeView::elemColors = {
-	{Element::REACTION::CHALEUR, sf::Color(255,0,0)},
-	{Element::REACTION::CONDUCTIVITE, sf::Color(255,255,0)},
-	{Element::REACTION::MAGNETISME, sf::Color(0,255,0)},
-	{Element::REACTION::PH, sf::Color(0,255,255)},
-	{Element::REACTION::RADIOACTIVITE, sf::Color(255,0,255)},
-	{Element::REACTION::__COUNT, sf::Color(0,0,0)},
+
+
+std::map<REAC,sf::Color> MatArchNodeView::elemColors = {
+	{REAC::CHALEUR, rgb(255,0,0)},
+	{REAC::CONDUCTIVITE, rgb(255,255,0)},
+	{REAC::MAGNETISME, rgb(0,255,0)},
+	{REAC::PH, rgb(0,255,255)},
+	{REAC::RADIOACTIVITE, rgb(255,0,255)},
+	{REAC::__COUNT, rgb(0,0,0)},
 };
 MatArchNodeView::MatArchNodeView(std::shared_ptr<MatArchNode> node):m_node(node){
 	m_font.loadFromFile("Minecraftia-Regular.ttf");
@@ -30,6 +32,21 @@ MatArchNodeView::MatArchNodeView(std::shared_ptr<MatArchNode> node):m_node(node)
 	m_pos = sf::Vector2f(300,300);
 	initShape();
 	initInputs();
+	initLines();
+	m_id = -1;
+}
+MatArchNodeView::MatArchNodeView(std::shared_ptr<MatArchNode> node,sf::Vector2f pos):m_node(node),m_pos(pos){
+	m_font.loadFromFile("Minecraftia-Regular.ttf");
+	g_lines = std::make_shared<sf::VertexArray>(sf::Lines);	
+	m_speedX = -500+rand()%1000;
+	m_speedY = -500+rand()%1000;
+	m_speedX /= 5000.f;
+	m_speedY /= 5000.f;
+	m_bounds = sf::Vector2f(600,600);
+	//m_pos = sf::Vector2f(300,300);
+	initShape();
+	initInputs();
+	initLines();
 	m_id = -1;
 }
 MatArchNodeView::~MatArchNodeView(){
@@ -41,10 +58,10 @@ void MatArchNodeView::initShape(){
 	g_shape.setOrigin(g_shape.getRadius(),g_shape.getRadius());
 }
 void MatArchNodeView::initInputs(){
-	for(int i =0; i < Element::REACTION::__COUNT; i++){
+	for(int i =0; i < REAC::__COUNT; i++){
 		g_inputs.push_back(sf::RectangleShape(sf::Vector2f(4,4)));
 		g_inputs.back().setOrigin(2,2);
-		g_inputs.back().setFillColor(elemColors.at(Element::REACTION(i)));
+		g_inputs.back().setFillColor(elemColors.at(REAC(i)));
 	}
 }
 void MatArchNodeView::printLinks(){
@@ -67,8 +84,44 @@ void MatArchNodeView::draw(std::shared_ptr<sf::RenderWindow> win){
 		win->draw(v);
 	}
 }
+void MatArchNodeView::initLines(){
+	
+	float delta = (2*PI_V)/REAC::__COUNT;
+	g_lines->clear();
+	g_values.clear();
+	for(std::size_t i = 0; i < linkedViews.size(); i++){
+		g_lines->append(sf::Vertex(g_inputs.at(int(linkedReac.at(i))).getPosition(),elemColors.at(linkedReac.at(i))));
+		g_lines->append(sf::Vertex(linkedViews.at(i)->g_inputs.at(int(linkedReac.at(i))).getPosition(),elemColors.at(linkedReac.at(i))));
+	}
+	for(int i =0; i < REAC::__COUNT; i++){
+		bool alreadyDrawn = false;
+		for(std::size_t j = 0; j < linkedReac.size(); j++){
+			if(i == linkedReac.at(j)){
+				alreadyDrawn = true;
+			}
+		}
+		if(!alreadyDrawn){
+			g_lines->append(sf::Vertex(g_inputs.at(i).getPosition(),elemColors.at(REAC(i))));
+			float	px = 50*std::cos(i*delta);
+			float 	py = 50*std::sin(i*delta);
+			g_lines->append(sf::Vertex(g_shape.getPosition() + sf::Vector2f(px,py),elemColors.at(REAC(i))));
+			g_values.push_back(sf::Text());
+			g_values.back().setFont(m_font);
+			g_values.back().setCharacterSize(18);
+			g_values.back().setPosition(g_shape.getPosition() + sf::Vector2f(px,py));
+			g_values.back().setFillColor(elemColors.at(REAC(i)));
+			int val = int(std::nearbyint(m_node->getElementRawValue(REAC(i))));
+			g_values.back().setString(std::to_string(val));
+			if(val < 0){
+				g_values.back().setOrigin(g_values.back().getCharacterSize()/2,0);
+			}
+		}
+	}
+	for(std::size_t i = 0; i < g_inputs.size(); i++){
+		g_inputs.at(i).setPosition(g_shape.getPosition() + sf::Vector2f(g_shape.getRadius()*std::cos(i*delta),g_shape.getRadius()*std::sin(i*delta)));
+	}
+}
 void MatArchNodeView::update(){
-	float delta = (2*PI_V)/Element::REACTION::__COUNT;
 	g_shape.setPosition(g_shape.getPosition() + sf::Vector2f(m_speedX,m_speedY));	
 	if(g_shape.getPosition().x < m_pos.x-m_bounds.x/2-m_speedX || g_shape.getPosition().x>m_pos.x+m_bounds.x/2-m_speedX){
 		m_speedX *=-1*((50+rand()%150)/100.f);
@@ -88,41 +141,9 @@ void MatArchNodeView::update(){
 			m_speedY /= 10;
 		}
 	}
-	g_lines->clear();
-	g_values.clear();
-	for(std::size_t i = 0; i < linkedViews.size(); i++){
-		g_lines->append(sf::Vertex(g_inputs.at(int(linkedReac.at(i))).getPosition(),elemColors.at(linkedReac.at(i))));
-		g_lines->append(sf::Vertex(linkedViews.at(i)->g_inputs.at(int(linkedReac.at(i))).getPosition(),elemColors.at(linkedReac.at(i))));
-	}
-	for(int i =0; i < Element::REACTION::__COUNT; i++){
-		bool alreadyDrawn = false;
-		for(std::size_t j = 0; j < linkedReac.size(); j++){
-			if(i == linkedReac.at(j)){
-				alreadyDrawn = true;
-			}
-		}
-		if(!alreadyDrawn){
-			g_lines->append(sf::Vertex(g_inputs.at(i).getPosition(),elemColors.at(Element::REACTION(i))));
-			float	px = 50*std::cos(i*delta);
-			float 	py = 50*std::sin(i*delta);
-			g_lines->append(sf::Vertex(g_shape.getPosition() + sf::Vector2f(px,py),elemColors.at(Element::REACTION(i))));
-			g_values.push_back(sf::Text());
-			g_values.back().setFont(m_font);
-			g_values.back().setCharacterSize(18);
-			g_values.back().setPosition(g_shape.getPosition() + sf::Vector2f(px,py));
-			g_values.back().setFillColor(elemColors.at(Element::REACTION(i)));
-			int val = int(std::nearbyint(m_node->getElementRawValue(Element::REACTION(i))));
-			g_values.back().setString(std::to_string(val));
-			if(val < 0){
-				g_values.back().setOrigin(g_values.back().getCharacterSize()/2,0);
-			}
-		}
-	}
-	for(std::size_t i = 0; i < g_inputs.size(); i++){
-		g_inputs.at(i).setPosition(g_shape.getPosition() + sf::Vector2f(g_shape.getRadius()*std::cos(i*delta),g_shape.getRadius()*std::sin(i*delta)));
-	}
+	initLines()	;
 }
-void MatArchNodeView::addLink(std::shared_ptr<MatArchNodeView> nodeV,Element::REACTION r){
+void MatArchNodeView::addLink(std::shared_ptr<MatArchNodeView> nodeV,REAC r){
 	linkedViews.push_back(nodeV);
 	linkedReac.push_back(r);
 }
@@ -134,4 +155,7 @@ void MatArchNodeView::setPosition(sf::Vector2f pos, sf::Vector2f dim ){
 	m_pos = pos;
 	m_bounds = dim;
 	g_shape.setPosition(pos);
+}
+sf::Vector2f MatArchNodeView::getPosition(){
+	return m_pos;
 }
